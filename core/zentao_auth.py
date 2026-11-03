@@ -24,7 +24,7 @@ class AuthError(RuntimeError):
 def _login(account: str, password: str) -> str:
     """调禅道 REST API 换 token。注意：这里用 json=，与网页表单登录不同。"""
     r = requests.post(
-        f"{settings.zentao_base}/zentao/api.php/v1/tokens",
+        f"{settings.zentao_base}/api.php/v1/tokens",
         json={"account": account, "password": password},
         timeout=settings.request_timeout,
     )

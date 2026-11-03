@@ -1,12 +1,14 @@
-# 映射配置 —— create_bug 节点的入参来源（第 2 周启用）
-# 启动校验：跑一次 zentao_list_modules，module_id 必须真实存在，不对 fail fast
-# TODO(week1): 禅道容器跑通后，用 list_modules 回填真实 module_id
+# 映射配置 —— finalize 建Bug 时的入参来源
+# 数据来源：只读 SQL 查 zt_module（2026-11-03 实测回填）
+#   - product 1 = 企业网站（唯一产品）
+#   - zt_module 的 story/bug 模块树挂在 root=1 下；bug 建单用 module=0（根）也合法
+# 启动校验（week2）：跑 zentao_get_constants / 只读 SQL 比对，映射失效 fail fast
 
 product:
   default: 1
 modules:
-  task: {module_id: 0}      # 占位，回填
-  bug:  {module_id: 0}      # 占位，回填
+  task: {module_id: 0}      # 0 = 根模块，禅道合法值
+  bug:  {module_id: 0}
 build: "trunk"
 assigned_to:
   default: "admin"
@@ -19,3 +21,8 @@ severity_by_dimension:       # 前提：triage category == product_bug
 dedup_search:
   status: "active"
   limit: 20
+
+# ---- 已确认的真实缺陷（week1 探测，week2 建单） ----
+# 缺陷#1 任务名称无长度上限校验：21/100 字符均可创建（HTTP 201）
+#   对应用例 TASK_004（known_bug → xfail）；severity 3 / pri 3
+# 语义不一致记录：GET 不存在任务=404，DELETE 不存在任务=200 success（幂等语义可辩护，暂不建单）

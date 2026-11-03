@@ -118,6 +118,8 @@ class CaseRunner:
 
         try:
             if not ev.ok:
+                if case.known_bug:
+                    pytest.xfail(f"已知缺陷: {case.known_bug_reason}")
                 raise AssertionError(f"[{case.id}] {ev.detail} | 快照: {ev.snapshot}")
 
             if case.expect.db_check:

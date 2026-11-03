@@ -95,6 +95,8 @@ class TestCase(BaseModel):
     expect: TestCaseExpect
     cleanup: list[CleanupAction] = Field(default_factory=list)
     no_cleanup_reason: str = ""  # 写操作豁免 cleanup 时必须写明原因（如登录类）
+    known_bug: bool = False      # 已确认的产品缺陷：断言失败 → xfail（修复后会变 XPASS）
+    known_bug_reason: str = ""
 
     @field_validator("id")
     @classmethod
