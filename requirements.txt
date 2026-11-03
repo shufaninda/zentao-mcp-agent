@@ -1,0 +1,10 @@
+pytest>=8
+pydantic>=2.7
+requests>=2.32
+python-dotenv>=1.0
+filelock>=3.13
+PyMySQL>=1.1
+PyYAML>=6.0
+loguru>=0.7
+# week2: langfuse, pymysql 已含
+# week3: chromadb, rank-bm25, langgraph, pydantic(已有)

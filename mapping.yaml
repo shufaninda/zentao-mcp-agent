@@ -1,0 +1,21 @@
+# 映射配置 —— create_bug 节点的入参来源（第 2 周启用）
+# 启动校验：跑一次 zentao_list_modules，module_id 必须真实存在，不对 fail fast
+# TODO(week1): 禅道容器跑通后，用 list_modules 回填真实 module_id
+
+product:
+  default: 1
+modules:
+  task: {module_id: 0}      # 占位，回填
+  bug:  {module_id: 0}      # 占位，回填
+build: "trunk"
+assigned_to:
+  default: "admin"
+severity_by_dimension:       # 前提：triage category == product_bug
+  error:      {severity: 1, pri: 1}   # 500 / 崩溃类
+  auth:       {severity: 2, pri: 1}   # 安全类，优先级压最高
+  boundary:   {severity: 3, pri: 2}
+  eq_invalid: {severity: 3, pri: 3}
+  normal:     {severity: 3, pri: 2}
+dedup_search:
+  status: "active"
+  limit: 20

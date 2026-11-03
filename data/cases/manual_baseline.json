@@ -1,0 +1,99 @@
+[
+  {
+    "id": "LOGIN_001",
+    "desc": "正常获取 API Token",
+    "dimension": "normal",
+    "auth": "admin",
+    "no_cleanup_reason": "登录类：换取会话凭证，不产生业务数据",
+    "request": {
+      "method": "POST",
+      "path": "/zentao/api.php/v1/tokens",
+      "json_body": { "account": "admin", "password": "123456" }
+    },
+    "expect": { "status_in": [200, 201], "body_has": ["token"] }
+  },
+  {
+    "id": "TASK_001",
+    "desc": "创建任务（正常流）",
+    "dimension": "normal",
+    "auth": "admin",
+    "request": {
+      "method": "POST",
+      "path": "/zentao/api.php/v1/tasks",
+      "json_body": { "name": "自动化基线-正常", "project": 1 }
+    },
+    "expect": { "status": 201, "body_has": ["id", "name"] },
+    "cleanup": [{ "method": "DELETE", "path": "/zentao/api.php/v1/tasks/{id}" }]
+  },
+  {
+    "id": "TASK_002",
+    "desc": "创建任务 name 为空应被拒绝",
+    "dimension": "eq_invalid",
+    "auth": "admin",
+    "no_cleanup_reason": "预期被服务端拒绝，无数据产生",
+    "request": {
+      "method": "POST",
+      "path": "/zentao/api.php/v1/tasks",
+      "json_body": { "name": "", "project": 1 }
+    },
+    "expect": { "status": 400 }
+  },
+  {
+    "id": "TASK_003",
+    "desc": "边界：name 恰好 20 字符",
+    "dimension": "boundary",
+    "auth": "admin",
+    "request": {
+      "method": "POST",
+      "path": "/zentao/api.php/v1/tasks",
+      "json_body": { "name": "aaaaaaaaaaaaaaaaaaaa", "project": 1 }
+    },
+    "expect": { "status": 201, "body_has": ["id"] },
+    "cleanup": [{ "method": "DELETE", "path": "/zentao/api.php/v1/tasks/{id}" }]
+  },
+  {
+    "id": "TASK_004",
+    "desc": "边界：name 21 字符应拒绝",
+    "dimension": "boundary",
+    "auth": "admin",
+    "no_cleanup_reason": "预期被服务端拒绝，无数据产生",
+    "request": {
+      "method": "POST",
+      "path": "/zentao/api.php/v1/tasks",
+      "json_body": { "name": "aaaaaaaaaaaaaaaaaaaaa", "project": 1 }
+    },
+    "expect": { "status": 400 }
+  },
+  {
+    "id": "TASK_005",
+    "desc": "查询不存在的任务应 404",
+    "dimension": "error",
+    "auth": "admin",
+    "request": { "method": "GET", "path": "/zentao/api.php/v1/tasks/99999999" },
+    "expect": { "status": 404 }
+  },
+  {
+    "id": "AUTH_001",
+    "desc": "无凭证访问任务列表应 401",
+    "dimension": "auth",
+    "auth": "nobody",
+    "request": { "method": "GET", "path": "/zentao/api.php/v1/tasks" },
+    "expect": { "status": 401 }
+  },
+  {
+    "id": "AUTH_002",
+    "desc": "普通用户访问人员列表（垂直越权探测）应 403",
+    "dimension": "auth",
+    "auth": "test1",
+    "request": { "method": "GET", "path": "/zentao/api.php/v1/users" },
+    "expect": { "status": 403 }
+  },
+  {
+    "id": "TASK_006",
+    "desc": "删除不存在的任务应 404（DELETE 是清理动作，豁免 cleanup）",
+    "dimension": "error",
+    "auth": "admin",
+    "request": { "method": "DELETE", "path": "/zentao/api.php/v1/tasks/99999999" },
+    "expect": { "status": 404 }
+  }
+]
