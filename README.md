@@ -31,7 +31,7 @@ L4 评测   金标准注入集 → 分级检出率 / 误报率 / 有效用例率
 | 跨运行记忆 | 指纹账本（write-ahead + TTL 孤儿恢复） |
 | 金标准评测集 | 可逆源码补丁注入 → **L2 3/3、L3 1/1、误报 0** |
 | 越权归因 | L3 注入实证：403→2xx 即使被业务校验挡住也判 product_bug |
-| 双后端记忆 | SQLite / MySQL 同一份逻辑，claim 幂等 + 复核回流真跑通过 |
+| 双后端记忆 | SQLite / **独立 MySQL 8 容器** 同一份逻辑真跑通过（claim 幂等 + 复核回流） |
 | 人工复核闭环 | `python -m scripts.review list/accept/reject` → muted 抑制 / RAG 回灌 |
 | 评测指标 | `eval/metrics.py` 纯函数：检出率/误报率/有效用例率/一轮通过率 |
 | 单测与报告 | 25 个单测 + Allure 产物 + Actions 绿色 |

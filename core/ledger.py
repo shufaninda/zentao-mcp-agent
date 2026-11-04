@@ -120,7 +120,7 @@ def _ddl() -> str:
         fp          VARCHAR(32) PRIMARY KEY,          -- md5(module|method+path|exp!=act|err_sig)[:12]
         module      TEXT NOT NULL,
         signature   TEXT NOT NULL,             -- 可读错误特征（供 search_bugs 关键词）
-        state       TEXT NOT NULL DEFAULT 'new',  -- new/creating/created/failed/recorded
+        state       VARCHAR(16) NOT NULL DEFAULT 'new',  -- new/creating/created/failed/recorded
         bug_id      INTEGER,
         count       INTEGER NOT NULL DEFAULT 1,
         first_seen  TEXT NOT NULL,
@@ -143,7 +143,7 @@ def _ddl() -> str:
         category   TEXT NOT NULL,
         confidence REAL NOT NULL,
         reasoning  TEXT,
-        status     TEXT NOT NULL DEFAULT 'pending',  -- pending/accepted/rejected
+        status     VARCHAR(16) NOT NULL DEFAULT 'pending',  -- pending/accepted/rejected
         created_at TEXT NOT NULL
     );
     """
