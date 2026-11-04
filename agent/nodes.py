@@ -119,14 +119,15 @@ def execute(state: dict) -> dict:
     proc = subprocess.run(cmd, cwd=PROJECT, capture_output=True, text=True,
                           timeout=600, env={**os.environ})
 
+    run_file = Path(settings.report_dir) / f"failures-{state['run_id']}.jsonl"
     records = []
     if failures_path.exists():
         records = [json.loads(l) for l in failures_path.read_text("utf-8").splitlines()
                    if l.strip()]
-        run_file = Path(settings.report_dir) / f"failures-{state['run_id']}.jsonl"
         run_file.write_text(
             "\n".join(json.dumps(r, ensure_ascii=False) for r in records), "utf-8")
-    state["failures_path"] = str(failures_path)
+    # 指针指向本次 run 的副本；无失败时回退到固定路径（文件为空或不存在）
+    state["failures_path"] = str(run_file if records else failures_path)
     state["failures"] = records
 
     # passed/failed 从 pytest 输出摘要解析（避免依赖 junitxml）
@@ -221,7 +222,8 @@ def finalize(state: dict) -> dict:
     report = finalize_impl(state["run_id"], state.get("bugs_to_create", []),
                            summary, state.get("bugs_linked"))
     state["report"] = report
-    state["report_path"] = settings.report_dir / f"report-{state['run_id']}.json"
+    # str 而非 Path：State 会进 checkpoint / JSON 序列化
+    state["report_path"] = str(settings.report_dir / f"report-{state['run_id']}.json")
     return state
 
 

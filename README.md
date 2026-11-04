@@ -11,11 +11,18 @@ LLM 只产出**数据**（用例 JSON）和**判断**（归因投票），不产
 
 ```
 L0 触发   CLI: python -m agent.orchestrator --task manual_baseline
-L1 编排   LangGraph StateGraph（8 节点 / 2 条件分支）
+L1 编排   LangGraph StateGraph(AgentState)（8 节点 / 2 条件分支）
+          regression = 无环 DAG；explore = validate→generate 有界回环（retry≤2）
 L2 能力   pytest subprocess（声明式解释器）· MCP server（6 工具）· LLM · RAG
 L3 数据   State（指针）→ 文件（大对象）→ MySQL/SQLite（跨运行记忆）
 L4 评测   金标准注入集 → 分级检出率 / 误报率 / 有效用例率
 ```
+
+State 的类型契约在 `agent/state.py`（`TypedDict, total=False`），已接入 `StateGraph`；
+`tests/unit/test_core.py::TestLangGraphStateContract` 用静态扫描锁住
+「节点写入的 key ⊆ schema 声明的 key」，并验证 explore 的回边存在。
+**已知技术债**：execute/triage/dedup/finalize 仍把大对象放进 State（契约要求只存路径），
+已在 `state.py` 显式标注为「实现态字段」，未伪装成符合契约。
 
 详细分层与节点契约见 `agent/nodes.py` 与 `agent/schemas.py` 的 docstring。
 

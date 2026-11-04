@@ -2,9 +2,13 @@
 
 两种模式（同一套节点函数，见 agent/nodes.py）：
   regression: intake → execute → triage → dedup → finalize
-              （用例已存在：人工基线 / 历史产出）
-  explore:    intake → retrieve → generate → validate → execute → ... 
-              validate 不过打回 generate（≤2 次，只补缺失维度）
+              （用例已存在：人工基线 / 历史产出；无回边 = DAG）
+  explore:    intake → retrieve → generate → validate → execute → ...
+              validate 不过打回 generate（≤2 次，只补缺失维度；有界回环）
+              → triage → dedup → finalize
+
+State schema 用 agent/state.py 的 AgentState（TypedDict, total=False），
+节点写入的 key 必须先在 schema 里声明，否则 LangGraph 1.x 会拒绝更新。
 
 用法：
     from agent.graph import build_graph
@@ -16,20 +20,21 @@ from __future__ import annotations
 from langgraph.graph import END, StateGraph
 
 from agent import nodes
+from agent.state import AgentState
 
 
-def _after_intake(state: dict) -> str:
+def _after_intake(state: AgentState) -> str:
     return END if state.get("error") else "continue"
 
 
-def _after_validate(state: dict) -> str:
+def _after_validate(state: AgentState) -> str:
     if state.get("coverage_gaps") and state.get("retry_count", 0) < 2:
         return "generate"          # 分支②：打回，只补缺失维度
     return "execute"               # 耗尽也继续：已通过的用例照跑
 
 
 def build_graph(mode: str = "regression"):
-    g = StateGraph(dict)
+    g = StateGraph(AgentState)
 
     g.add_node("intake", nodes.intake)
     if mode == "explore":

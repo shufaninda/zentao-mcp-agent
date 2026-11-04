@@ -204,3 +204,36 @@ class TestRetrieve:
         sources = {c["source"] for c in chunks}
         assert any("接口文档" in s for s in sources)
         assert any("Issue" in s for s in sources)
+
+
+class TestLangGraphStateContract:
+    """锁住「节点写入 key ⊆ AgentState 声明 key」——防文档/实现再次漂移。"""
+
+    def test_every_written_key_is_declared(self):
+        import re
+        from pathlib import Path
+        from agent.state import AgentState
+
+        src = (Path(__file__).resolve().parents[2] / "agent" / "nodes.py").read_text("utf-8")
+        written = set(re.findall(r'state\["(\w+)"\]\s*=', src))
+        declared = set(AgentState.__annotations__)
+        assert written, "没扫到任何节点写入，正则可能失效"
+        assert written - declared == set(), f"未声明的 state key: {written - declared}"
+
+    def test_graph_uses_typed_schema(self):
+        from agent.graph import build_graph
+        from agent.state import AgentState
+
+        for mode in ("regression", "explore"):
+            app = build_graph(mode)
+            assert set(app.get_graph().nodes) >= {
+                "intake", "execute", "triage", "dedup", "finalize"}
+        assert AgentState.__total__ is False
+
+    def test_explore_has_bounded_backedge(self):
+        """validate → generate 的回边存在（不是 DAG），靠 retry_count 收敛。"""
+        from agent.graph import build_graph
+        app = build_graph("explore")
+        edges = {(e.source, e.target) for e in app.get_graph().edges}
+        assert ("validate", "generate") in edges
+        assert ("validate", "execute") in edges
