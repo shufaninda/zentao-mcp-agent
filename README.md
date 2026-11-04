@@ -1,55 +1,73 @@
-# zentao-agent
+# zentao-mcp-agent
 
-禅道 MCP Agent —— 「接单 → 出题 → 考试 → 判卷 → 落档」的自动化测试 Agent。
+> 一个「接单 → 出题 → 考试 → 判卷 → 落档」的禅道自动化测试 Agent：
+> LangGraph 8 节点编排 + 声明式用例执行器 + 证据加权归因 + 跨运行记忆 + 金标准评测集。
 
-架构定稿见对话记录：LangGraph 8 节点 + 声明式用例执行器 + 证据加权归因 + MySQL 跨运行记忆。
-方法论来源：AI 代码审核流程迁移（生成者/审核者分离、确定性校验在前、轮数上限、先只跑不建单）。
+**核心设计原则**（来自 Anthropic 公布的代码审核流程迁移，见下文"方法论"）：
+LLM 只产出**数据**（用例 JSON）和**判断**（归因投票），不产出可执行代码；
+「怎么测」交给确定性的 pytest，「算不算 Bug」交给证据加权，「建不建单」交给三道幂等防线。
 
-## 当前状态（第 1 周）
+## 架构
 
-| 模块 | 状态 |
+```
+L0 触发   CLI: python -m agent.orchestrator --task manual_baseline
+L1 编排   LangGraph StateGraph（8 节点 / 2 条件分支）
+L2 能力   pytest subprocess（声明式解释器）· MCP server（6 工具）· LLM · RAG
+L3 数据   State（指针）→ 文件（大对象）→ MySQL/SQLite（跨运行记忆）
+L4 评测   金标准注入集 → 分级检出率 / 误报率 / 有效用例率
+```
+
+详细分层与节点契约见 `agent/nodes.py` 与 `agent/schemas.py` 的 docstring。
+
+## 已验证的能力（全部真实禅道实测）
+
+| 能力 | 证据 |
 |---|---|
-| `agent/schemas.py` | ✅ TestCase 契约 + 5 个 validator（规则层，能用规则别用模型） |
-| `agent/coverage.py` | ✅ validate_coverage 纯函数 + 有效用例率口径 |
-| `agent/state.py` | ✅ State 定义（只存指针/计数器） |
-| `core/config.py` | ✅ 配置中心（AUTO_CREATE_BUG=false 功能开关） |
-| `core/zentao_auth.py` | ✅ 认证提供者（文件缓存 + filelock + 只重登一次） |
-| `core/executor.py` | ✅ 声明式解释器（防 SSRF / phase 语义 / cleanup） |
-| `core/dbcheck.py` | ✅ 只读连接 + 轮询（未配 DSN 自动跳过） |
-| `core/trace.py` | ✅ 可观测性桩（第 2 周换 Langfuse，接口不变） |
-| `tests/test_dynamic.py` | ✅ 桥（方案 b：固定文件 + pytest_generate_tests） |
-| `tests/conftest.py` | ✅ 三个契约落地点 + setup 熔断 + failures.jsonl |
-| `data/cases/manual_baseline.json` | ✅ 人工基线 9 条（覆盖 6 维度中的 5 个） |
-| `tools/` | ⏳ 第 2 周：6 个 MCP 工具（签名已冻结在 docstring） |
-| `agent/graph.py` | ⏳ 第 3 周：LangGraph 接线 |
+| 声明式用例执行器 | 基线 9 条全绿 0.79s；LLM 输出永不 eval；防 SSRF |
+| 故障注入→检出→建单 | 注入 L2 缺陷 → 归因 product_bug 0.8 → 禅道真实建 Bug |
+| 三道幂等防线 | 第二次运行关联已有 Bug，零重复建单 |
+| 归因分类（v3） | 金标准双场景：clean 0 误报 / 注入检出 |
+| 功能开关 | AUTO_CREATE_BUG=false 时只记录不建单 |
+| 跨运行记忆 | 指纹账本（write-ahead + TTL 孤儿恢复） |
+| 金标准评测集 | 可逆源码补丁注入（双层校验同时打穿） |
 
 ## 快速开始
 
 ```bash
-# 1. 环境
 pip install -r requirements.txt
-copy .env.example .env        # 按实际改
+copy .env.example .env          # 填禅道地址与账号
 
-# 2. 健康检查（拿不到 token 会 exit 1，execute 不必跑）
-python run_agent.py --task manual_baseline
+# 单元测试（不需要禅道）
+pytest tests/unit -v
 
-# 3. 跑基线（9 条，覆盖 normal/eq_invalid/boundary/error/auth）
+# 全链路（需要本地 Docker 禅道）
+python -m agent.orchestrator --task manual_baseline
 pytest tests/test_dynamic.py -v
-
-# 4. 看失败落盘（execute 节点的产物）
-cat report/failures.jsonl
 ```
 
-## 第一次跑的预期
+## 目录
 
-禅道各版本对 400/403/404 的实际返回不完全一致——**第一次跑红是正常流程**：
-失败会带期望值/实际值/响应快照落在 `report/failures.jsonl`，按实际回填
-`manual_baseline.json` 的 expect 字段，跑绿即为第 1 周里程碑（执行器全绿基线）。
+```
+agent/    节点 · 契约 · 归因 · 去重 · finalize · LangGraph 接线
+core/     配置 · 认证 · 执行器 · db_check · 账本 · LLM · 可观测性
+tools/    6 个 MCP 工具 + FastMCP server
+scripts/  故障注入 · issue 采集 · 金标准矩阵
+tests/    单元测试（纯函数层）+ 集成（test_dynamic 桥）
+data/     用例 JSON · 金标准 · 知识库
+```
 
-## 铁律（改代码前重读）
+## 方法论
 
-1. triage → dedup → finalize 顺序锁死
-2. uncertain 不建 Bug（宁可漏报不可误报）
-3. 每个节点幂等：中间产物落盘，重放读磁盘
-4. 事务边界 = 单节点记忆写入；事务里禁调禅道 API
-5. 契约写进代码（docstring / type hint / yaml 行内注释），不写独立文档
+用例生成链路参考 Anthropic 公布的 Claude Code 代码审核流程，迁移三条核心规则：
+**生成者与审核者分离**（validate 独立上下文）、**确定性校验在前模型在后**
+（Pydantic/覆盖度闸门，能用规则不用模型）、**轮数必须设上限**（validate 打回 ≤2 次）。
+
+评测采用故障注入法：向禅道源码打可逆补丁制造已知缺陷，用「分级检出率 +
+误报率」双指标验证归因质量——两个数字必须一起报，只报检出率会翻车。
+
+## 待办
+
+- [ ] 探索模式（LLM 生成用例）真实跑通（需 LLM_API_KEY）
+- [ ] 记忆层换 MySQL（schema 已同构，改 DSN 即可）
+- [ ] Langfuse trace 接入（接口已埋 @observe）
+- [ ] L3 隐蔽缺陷注入（越权/并发）

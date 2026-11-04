@@ -41,6 +41,32 @@
       "requires": ["DEF_L2_001"]
     },
     {
+      "id": "DEF_L2_003",
+      "level": "L2",
+      "name": "禁用 Bug 标题必填（form 层 + model 层双补丁，缺一不生效）",
+      "kind": "source_patch",
+      "file": "/apps/zentao/module/bug/config/form.php",
+      "find": "$config->bug->form->create['title']       = array('required' => true,  'type' => 'string', 'filter' => 'trim');",
+      "replace": "$config->bug->form->create['title']       = array('required' => false,  'type' => 'string', 'filter' => 'trim');",
+      "catching_case": "BUG_TITLE_001",
+      "expected_category": "product_bug",
+      "expected_dimension": "eq_invalid",
+      "requires": ["DEF_L2_004"]
+    },
+    {
+      "id": "DEF_L2_004",
+      "level": "L2",
+      "name": "Bug requiredFields 去掉 title（model 层）",
+      "kind": "source_patch",
+      "file": "/apps/zentao/module/bug/config.php",
+      "find": "$config->bug->create->requiredFields      = 'title,openedBuild';",
+      "replace": "$config->bug->create->requiredFields      = 'openedBuild';",
+      "catching_case": "BUG_TITLE_001",
+      "expected_category": "product_bug",
+      "expected_dimension": "eq_invalid",
+      "requires": ["DEF_L2_003"]
+    },
+    {
       "id": "DRILL_ENV_001",
       "level": "drill",
       "name": "非缺陷对照：停容器（环境问题）",

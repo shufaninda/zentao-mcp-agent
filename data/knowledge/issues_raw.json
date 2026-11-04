@@ -1,0 +1,673 @@
+[
+ {
+  "issue_id": 191,
+  "title": "[Bug] 21.7.8 开源版执行用例后，测试单执行记录页\"步骤/预期/用例版本\"列全部为空",
+  "body": "## 版本\n\nZenTao 开源版 **21.7.8** (rnd vision)\n\n## 复现步骤\n\n1. 在测试单中执行任意用例（无论手动浏览器点击执行，还是通过 REST API / session API 提交都复现）\n2. 提交执行结果后，进入该测试单的 `执行记录` 标签页（URL: `/testtask-results-{runID}.html`）\n3. 查看刚刚提交的那条执行记录\n\n## 预期结果\n\n执行记录表格里，每个步骤行的 **`步骤`** / **`预期`** / **`用例版本`** 三列应正确显示用例步骤的描述、预期结果和用例版本号。\n\n## 实际结果\n\n`步骤` / `预期` / `用例版本` 三列**全部为空**，只有 `测试结果` 和 `实际情况` 两列正常显示。\n\n渲染出来的 HTML 节点是空 div：\n\n```html\n\n  \n      \n  \n       \n    \n  失败  \n  实际情况内容  \n\n```\n\n## 根因定位（已读源码 + 反序列化 DB 字段确认）\n\n1. **`module/testtask/config/form.php` line 72-74**：runCase 表单配置只声明了 `result` 和 `real` 两个字段\n   ```php\n   $config->testtask->form->runCase = array();\n   $config->testtask->form->runCase['result'] = array('required' => true,  'type' => 'string', 'default' => '', 'base' => true);\n   $config->testtask->form->runCase['real']   = array('required' => false, 'type' => 'string', 'default' => '');\n   ```\n\n2. **`module/testtask/control.php` line 901** `runCase()`：通过 `form::batchData(...)->get()` 拿到的 `$stepResults` 因此每步只有 `result` + `real` 两个 key\n   ```php\n   $stepResults = form::batchData($this->config->testtask->form->runCas",
+  "url": "https://github.com/easysoft/zentaopms/issues/191",
+  "labels": [
+   "invalid"
+  ],
+  "closed_at": "2026-05-28T05:54:39Z",
+  "quality": "high"
+ },
+ {
+  "issue_id": 97,
+  "title": "BUG数量多，万条；新建bug异常缓慢",
+  "body": "",
+  "url": "https://github.com/easysoft/zentaopms/issues/97",
+  "labels": [],
+  "closed_at": "2024-06-19T00:20:13Z",
+  "quality": "high"
+ },
+ {
+  "issue_id": 151,
+  "title": "编辑【指派给我的bug】弹窗，每编辑一次，后面的“指派给我”文案就会被增加一次",
+  "body": "### 描述 (Description)\n\n编辑【指派给我的bug】弹窗，每编辑一次，后面的“指派给我”文案就会被增加一次\r\n\r\n\r\n\r\n\n\n### 期望 (Expectation)\n\n文案被正确设置\n\n### 结果 (Result)\n\n文案设置失败\n\n### 软件版本 (Software version)\n\n_No response_",
+  "url": "https://github.com/easysoft/zentaopms/issues/151",
+  "labels": [],
+  "closed_at": "2024-08-26T02:55:01Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 102,
+  "title": "怎么记录bug第一次指派的人？",
+  "body": "",
+  "url": "https://github.com/easysoft/zentaopms/issues/102",
+  "labels": [],
+  "closed_at": "2024-06-19T00:15:16Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 105,
+  "title": "Bug中包含视频文件，不能直接查看，非常不方便",
+  "body": "很多 App 上的 bug，为了加强 bug 步骤的可靠性，一般采用录制小视频方式上传禅道，但是开发人员在查看这些 bug 时候，需要下载视频才能看到，这样就非常不方便，而且还要手动去删除下载后的视频，希望能改进下，可以直接观看，这样可以增加开发人员的操作便捷性，提升开发人员对禅道的认可性。",
+  "url": "https://github.com/easysoft/zentaopms/issues/105",
+  "labels": [
+   "enhancement"
+  ],
+  "closed_at": "2023-01-05T06:51:43Z",
+  "quality": "high"
+ },
+ {
+  "issue_id": 101,
+  "title": "【Bug】禅道17.7安装时与mariadb-server-5.5.68 存在兼容性问题。",
+  "body": "系统：CentOS 7.9\r\nphp：5.4.16-48\r\nmariadb-server：5.5.68-1\r\nhttpd：2.4.6-97\r\n\r\n\r\n我下载的是[php5.4_5.6](https://www.zentao.net/dl/zentao/17.7/ZenTaoPMS.17.7.php5.4_5.6.1.noarch.rpm)的RPM包。\r\n\r\n按照文档进行一步一步安装。\r\n\r\n\r\n\r\n在安装到这一步时。\r\n\r\n\r\n\r\n报错“您当前的数据库不支持使用InnoDB数据表引擎，请修改为MyISAM后重试。”。\r\n\r\n\r\n\r\n\r\n\r\n我这里查询了数据表引擎，默认是InnoDB。\r\n\r\n```\r\nshow engines\\g;\r\n+--------------------+---------+----------------------------------------------------------------------------------+--------------+------+------------+\r\n| Engine             | Support | Comment                                                                          | Transactions | XA   | Savepoints |\r\n+--------------------+---------+----------------------------------------------------------------------------------+--------------+------+------------+\r\n| CSV                | YES     | Stores tables as CSV files                                                       | NO           | NO   | NO         |\r\n| MRG_MYISAM         | YES     | Collection of identical MyISAM tables                                            | NO           | NO   | NO         |\r\n| MyISAM             | DEFAULT | No",
+  "url": "https://github.com/easysoft/zentaopms/issues/101",
+  "labels": [],
+  "closed_at": "2024-06-19T00:15:06Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 116,
+  "title": "禅道BUG新增的时候，所属执行没有把已关闭的过滤掉",
+  "body": "禅道BUG新增的时候，所属执行没有把已关闭的过滤掉\r\n应该参考影响版本，默认展示可用的，点击所有能加载全部~",
+  "url": "https://github.com/easysoft/zentaopms/issues/116",
+  "labels": [
+   "bug",
+   "processing"
+  ],
+  "closed_at": "2024-03-18T00:53:59Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 119,
+  "title": "测试模块-无法选择其他项目默认首个项目bug-开源版18.3",
+  "body": "",
+  "url": "https://github.com/easysoft/zentaopms/issues/119",
+  "labels": [],
+  "closed_at": "2024-03-18T00:53:23Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 122,
+  "title": "18.6升级到18.7打开执行、bug页面报错",
+  "body": "错误内容：syntax error, unexpected '|', expecting variable (T_VARIABLE) in module/tree/model.php on line 1013 when visiting product-all",
+  "url": "https://github.com/easysoft/zentaopms/issues/122",
+  "labels": [],
+  "closed_at": "2023-09-14T03:15:34Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 110,
+  "title": "调用API进行创建bug的时候，无法指定指派人",
+  "body": "\r\n\r\n\r\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/110",
+  "labels": [
+   "question"
+  ],
+  "closed_at": "2023-03-24T05:06:18Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 37,
+  "title": "Logout Bug",
+  "body": "After logout if i navigate to /www i find my self logged in",
+  "url": "https://github.com/easysoft/zentaopms/issues/37",
+  "labels": [],
+  "closed_at": "2019-09-21T05:56:15Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 10,
+  "title": "bug 无法标记进行中 和 工时统计",
+  "body": "之前使用 redmine 所有的issue 都是可以标记进行中状态的，关闭后会有工时统计，禅道能不能加上",
+  "url": "https://github.com/easysoft/zentaopms/issues/10",
+  "labels": [],
+  "closed_at": "2017-09-14T02:16:34Z",
+  "quality": "high"
+ },
+ {
+  "issue_id": 203,
+  "title": "API v2: omitted testcase stepType can cause partial step persistence",
+  "body": "## 版本与接口\n\n禅道开源版 22.6，API v2 用例创建/编辑。对照当前 main `d5bfff8c91cea48018275381e0a127ed6fa5c79f`。经 MCP 调用发现，但缺陷位于后端步骤参数处理。\n\n## 复现（仅使用临时测试用例）\n\n调用 `PUT /api.php/v2/testcases/{caseID}`：\n\n```json\n{\"title\":\"Synthetic case\",\"steps\":[\"First\",\"Second\"],\"expects\":[\"Expected first\",\"Expected second\"]}\n```\n\n省略可选参数 stepType。受影响部署中，新版本只保留第一步且类型为空；补充 `\"stepType\":[\"step\",\"step\"]` 后两步均正常。\n\n## 原因与预期\n\n`module/testcase/config/form.php` 默认 stepType 为 `array('')`，`testcaseTao::insertSteps()` 直接访问 `$stepTypes[$stepKey]`。两步输入分别得到空字符串、未定义下标/null，而数据库 type 不允许 null，产生部分保存风险。\n\n省略类型应按步骤补齐默认 step；显式平行数组不匹配、无效类型应在任何模型写入前返回明确错误。不能静默丢步骤。\n\n已准备后端归一化及校验补丁，覆盖创建和编辑，与“整个 steps 被省略时应保留原步骤”一并处理。无需改动数据库结构。\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/203",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-10-21T00:35:58Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 212,
+  "title": "常驻 cron 进程的 SQL profiling 数组持续累积，导致内存增长（22.5，22.6 源码仍存在）",
+  "body": "### 描述（Description）\n\n在长期运行的 cron scheduler / consumer 中，每次 SQL 执行都会向进程内的静态 profiling 数组追加记录，相关循环没有对应的清理。即使 debug 为 0，`dbh::$flags`、`dbh::$queries`、`dbh::$durations` 也会增长。\n\n正常 Web 请求结束时进程内状态会释放，但常驻 cron 进程长期重复执行，记录会持续保留在内存中。\n\n### 软件版本与验证范围（Software version）\n\n- 实际运行并完成隔离复现：开源版 22.5，Docker 镜像 `hub.zentao.net/app/zentao:22.5`，PHP 8.1.31，Linux/amd64。\n- 该镜像 digest：`sha256:86bcc60a6917bcbe940674a9aeb1a5cf5dba94262aa25d69959fb0ef14a0e845`。\n- 22.6 的 `zentaopms_22.6_20260917` 标签（commit `d5bfff8c91cea48018275381e0a127ed6fa5c79f`）已做源码检查，仍存在相同的追加逻辑，相关 cron 循环没有 profiling 数组清理。\n- 提交本 issue 前检查了当前 main 分支，也仍看到相同逻辑；未进行 22.6 的完整运行验证。\n\n### 源码依据\n\n1. [lib/dbh/dbh.class.php:304-311](https://github.com/easysoft/zentaopms/blob/d5bfff8c91cea48018275381e0a127ed6fa5c79f/lib/dbh/dbh.class.php#L304-L311)：SQL 执行的 finally 中无条件追加 flags / queries / durations；debug 开启时还追加 traces。\n2. [lib/base/dao/dao.class.php:497-500](https://github.com/easysoft/zentaopms/blob/d5bfff8c91cea48018275381e0a127ed6fa5c79f/lib/base/dao/dao.class.php#L497-L500)：`clearCache()` 只调用 cache 对象的 clear，并不清空这些 profiling 数组。\n3. [module/cron/control.php:181](https://github.com/easysoft/zentaopms/blob/d5bfff8c91cea48018275381e0a127ed6fa5c79f/module/cron/control.php#L181)、[rrConsume():214](https://github.com/easysoft/zentaopms/blob/d5bfff8c91cea48018275381e0a127ed6fa5c79f/module/cron/control.php#L214)、[consumeTasks():394](https://github.com/easysoft/zentaopms/blob/d5bfff8c91cea48018275381e0a127ed6fa5c79f/module/cron/control.php#L394)：schedule",
+  "url": "https://github.com/easysoft/zentaopms/issues/212",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-10-21T00:43:54Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 108,
+  "title": "能不能在项目流程加上代码评审流程环节",
+  "body": "代码评审环节包括代码评审计划、代码审查缺陷库、评审报告",
+  "url": "https://github.com/easysoft/zentaopms/issues/108",
+  "labels": [],
+  "closed_at": "2024-03-18T00:22:13Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 210,
+  "title": "API v2 权限失败及缺失功能返回非法 JSON 或空正文",
+  "body": "## 问题概述\n\n禅道开源版 22.6 的 API v2 在以下场景未返回可识别的合法失败响应：\n\n1. 用户有产品访问权限，但无权访问某 Bug 所属执行时，Bug 详情接口可能返回两段拼接的 JSON，其中包含 `status: success` 和界面权限提示。完整响应不是合法 JSON。\n2. 项目列表使用 `browseType=review` 或相关评审筛选时，开源版数据表不存在所需评审字段，接口可能返回 HTTP 200 空正文。\n3. 工单、反馈路由存在于通用 API 配置中，但当前安装版本缺少对应模块时，接口可能返回 HTTP 200 空正文，而不是明确说明功能不可用。\n\n## 复现方式\n\n- 选择一个当前用户可以访问其产品、但无权访问所属执行的 Bug，通过 `/api.php/v2/bugs/{bugID}` 读取详情，检查完整正文能否解析为单一 JSON。\n- 在不包含评审字段的开源版上请求 `/api.php/v2/projects?browseType=review`。\n- 在未安装工单或反馈模块的版本上请求 `/api.php/v2/products/{productID}/tickets` 或 `/feedbacks`。\n\n上述均为读取操作，不需要创建或修改业务数据。编号应替换为测试环境实际记录。\n\n## 预期与修复范围\n\n失败应返回单一、合法且带有明确消息的失败 JSON，保持权限拒绝，不将错误封装成成功。评审能力按照实际表字段判断；可选模块按照框架解析后的实际模块路径判断，不硬编码所有版本都不支持。\n\n建议在进入界面控制器或异常查询之前完成检查，避免把界面提示和跳转输出混入 API 响应。不修改正常界面行为。\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/210",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-10-21T00:45:06Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 208,
+  "title": "项目集项目列表接口传入项目编号时，静默返回其他项目集的数据",
+  "body": "## 问题描述\n\n禅道开源版 22.6 的 `GET /api.php/v2/programs/{programID}/projects` 接口可能接受项目编号而非项目集编号，并静默返回另一个项目集下的项目。\n\n## 复现步骤\n\n1. 使用有权访问项目集 A 及其下属项目的账号。\n2. 选择该账号可访问的记录 B，其 `zt_project.type` 为 `project`，而非 `program`。\n3. 请求 `/api.php/v2/programs/B/projects?browseType=all`。\n4. 接口返回成功，但结果属于另一个可访问的项目集，而没有将 B 作为无效项目集编号拒绝。\n\n字母代表测试数据的实际编号，调用时需要替换。复现不需要写入数据库。\n\n## 原因分析\n\nAPI 路由将 `programID` 映射到 `TABLE_PROJECT`，检查记录存在性和权限，但未检查记录类型。\n\n随后，`program::project()` 将该编号和可访问的项目集列表传入 `program::checkAccess()`。该方法用于界面访问，当编号不在列表中时，会替换为第一个可访问的项目集编号，导致 API 请求的资源被静默替换。\n\n## 预期行为\n\n拒绝缺失、为零、不存在、已删除或记录类型不是项目集的编号。无权访问的项目集仍应拒绝访问；不改变正常界面的默认项目集选择行为。\n\n## 建议修复\n\n在 API v2 的 GET `program.project` 路由进入控制器前增加限定范围的校验，复用既有错误响应和权限检查，不修改共用的界面逻辑。\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/208",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-10-21T00:44:59Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 211,
+  "title": "为项目与项目集统一补充负责人账号、姓名和用户编号",
+  "body": "## 问题描述\n\nAPI v2 项目列表会把 `PM` 从账号转换为姓名，并提供用户编号；项目集列表保留账号。调用方无法仅凭同名字段稳定关联负责人，使用显示姓名关联也存在重名风险。\n\n## 兼容性改进\n\n保留各接口原有 `PM` 值，针对已授权返回的项目、项目集列表及详情，补充三个统一字段：\n\n- `PMAccount`：账号；未设置时为空字符串。\n- `PMName`：姓名；姓名为空或用户记录缺失时回退为账号。\n- `PMUserID`：用户编号；未设置或用户记录缺失时为 0。\n\n只根据本次响应已包含的对象编号查询负责人，不扩大项目可见范围，不开放用户列表权限，不返回额外个人资料。采用批量查询，避免每条记录单独查询数据库。\n\n保留数组、编号键值对象和详情对象的原有结构，以及原分页信息、业务字段和写接口行为。此项为接口一致性改进，不要求改变原 `PM` 的语义。\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/211",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-10-21T00:45:18Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 200,
+  "title": "API 记录工时只有公司管理员可用：POST /tasks/{id}/estimate 鉴权用的 task-recordWorkhour 不是权限项",
+  "body": "## 现象\n\n`POST /api.php/v1/tasks/{id}/estimate`（记录工时）对普通成员一律返回 403 `{\"error\":\"Access not allowed\"}`，即使该成员是任务的执行者、且所在权限组已经勾选了「记录工时」。把该账号加入公司管理员（`zt_company.admins`）后同一请求返回 200。\n\n版本：开源版 22.5（`easysoft/zentao:22.5-20260821-php7`）。\n\n## 原因\n\n`api/v1/entries/taskrecordestimate.php` 的 `post()` 通过控制器方法名鉴权：\n\n```php\n$control = $this->loadController('task', 'recordWorkhour');\n```\n\n`framework/api/entry.class.php::loadController()` 会先 `checkPriv()`，也就是 `commonModel::hasPriv('task', 'recordWorkhour')`。\n\n但 **`recordWorkhour` 不是权限项**。权限清单（`module/group/lang/allresources.php`）里 `task` 模块共 24 条权限，与工时相关的只有：\n\n```\nrecordEstimate => recordEstimateAction\neditEstimate   => editEstimate\ndeleteEstimate => deleteEstimate\n```\n\n数据库里也是同样的结果：\n\n```sql\nselect module, method, count(*) from zt_grouppriv where method like '%stimate%' group by module, method;\n-- task | recordEstimate | 14 组\n-- task | editEstimate   | 14 组\n-- task | deleteEstimate | 14 组\nselect count(*) from zt_grouppriv where module='task' and method='recordWorkhour';\n-- 0\n```\n\n也就是说，**任何权限组都不可能被授予 `task-recordWorkhour`**，`getUserPriv()` 里只剩公司管理员的短路能通过：\n\n```php\nif(!empty($app->user->admin) or strpos($app->company->admins, \",{$app->user->account},\") !== false) return true;\n```\n\n结果就是：只有公司管理员能通过 API 记录工时。对一个任务跟踪系统来说，工时本应由任务执行者自己填写，这个限制显然不合预期。\n\n同一个入口的 `get()` 反而是对的，它优先走 effort 模块：\n\n```php\n$issetEffort = $this->loadModel('effort') ? true : false;\nif($issetEffort) $control = $this->loadController('effort', 'createForObject');\nelse             $control = $",
+  "url": "https://github.com/easysoft/zentaopms/issues/200",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-10-21T00:34:21Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 183,
+  "title": "API 创建 Epic / Requirement 未传 grade 时会落成 0",
+  "body": "## 问题描述\n\n在部分禅道实例中，通过 API 创建 `Epic` / `Requirement` 时，如果请求体里省略 `grade`，对象会被保存为 `grade = 0`。\n\n这样会带来两个直接问题：\n\n- 详情页右侧会显示“需求层级 0”\n- 列表页无法正常显示 `BR / UR / SR` 标签\n\n我这边已经多次复现，并验证了：\n\n- **省略 `grade`**：创建后查询详情，返回 `grade = 0`\n- **显式传 `grade: 1`**：创建后查询详情，返回正常的 `grade = 1`\n\n## 最小复现\n\n### 1. 创建 Epic 时省略 `grade`\n\n请求示例：\n\n```bash\ncurl -X POST \"$ZENTAO_URL/api.php/v2/epics\" \\\n  -H \"token: $ZENTAO_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"productID\": 42,\n    \"title\": \"API grade default check epic\",\n    \"reviewer\": [\"admin\"],\n    \"pri\": 2\n  }'\n```\n\n随后查询：\n\n```bash\ncurl \"$ZENTAO_URL/api.php/v2/epics/{id}\" -H \"token: $ZENTAO_TOKEN\"\n```\n\n观察到返回中 `type = \"epic\"`，但 `grade = \"0\"`。\n\n### 2. 创建 Requirement 时省略 `grade`\n\n请求示例：\n\n```bash\ncurl -X POST \"$ZENTAO_URL/api.php/v2/requirements\" \\\n  -H \"token: $ZENTAO_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"productID\": 42,\n    \"parent\": 1001,\n    \"title\": \"API grade default check requirement\",\n    \"reviewer\": [\"admin\"],\n    \"pri\": 2\n  }'\n```\n\n随后查询：\n\n```bash\ncurl \"$ZENTAO_URL/api.php/v2/requirements/{id}\" -H \"token: $ZENTAO_TOKEN\"\n```\n\n观察到返回中 `type = \"requirement\"`，但 `grade = \"0\"`。\n\n### 3. 显式传 `grade: 1` 时正常\n\n如果在以上两个创建请求中显式增加：\n\n```json\n\"grade\": 1\n```\n\n创建后的详情返回就是正常的 `grade = 1`。\n\n## 期望行为\n\n我理解这里至少应该满足下面两种之一：\n\n1. 如果 `grade` 未传，后端按当前类型的默认层级写入，例如：\n   - `epic` 默认写入有效层级（通常是 `1`）\n   - `requirement` 默认写入有效层级（通常是 `1`）\n2. 或者接口文档明确说明：创建 `Story / Epic / Requirement` 时，`grade` 为必填\n\n当前最不合理的地方是：\n\n- 接口没有报错\n- 对象类型是对的\n- 但层级被写成了 UI 无法正常展示的 `0`\n\n## 影",
+  "url": "https://github.com/easysoft/zentaopms/issues/183",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-05-07T07:00:12Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 185,
+  "title": "zentaopms_22.1_20260413 缺少文档编辑器 BlockSuite 静态资源",
+  "body": "## 环境\n\n- 源码仓库：`https://github.com/easysoft/zentaopms`\n- 使用 tag：`zentaopms_22.1_20260413`\n- 运行环境：PHP 8.2 + Apache\n- 访问方式：HTTPS 反向代理；但后端 HTTP 直连也能复现同样问题\n- 浏览器：Chrome\n\n## 问题现象\n\n在禅道中创建文档时，页面控制台报错：\n\n```text\nRefused to execute script from `https://zt.example.com/js/zui3/editor/blocksuite/editor.umd.cjs?v=...` because its MIME type (`text/html`) is not executable, and strict MIME type checking is enabled.\n\n[ZUI] Failed to load JS from: /js/zui3/editor/blocksuite/editor.umd.cjs\n```\n\n## 排查结果\n\n`www/js/zui3/zui.zentao.js` 中会注册并懒加载 BlockSuite 资源：\n\n```text\neditor/blocksuite/editor.umd.cjs\neditor/blocksuite/editor.css\n```\n\n但在 `zentaopms_22.1_20260413` 这个 tag 的源码树中，没有以下目录：\n\n```text\nwww/js/zui3/editor/blocksuite/\n```\n\n因此浏览器请求：\n\n```text\n/js/zui3/editor/blocksuite/editor.umd.cjs\n```\n\n时没有拿到真实的 JavaScript 文件，而是返回了禅道的 HTML 页面或登录页，响应 MIME 变成 `text/html`，Chrome 严格 MIME 检查下拒绝执行，导致文档编辑器无法加载。\n\n我也在本地确认过该 tag 中 `git ls-tree -r --name-only zentaopms_22.1_20260413 | grep blocksuite` 没有相关文件。\n\n## 期望结果\n\n如果 GitHub tag 预期可以直接作为运行源码使用，希望该 tag 包含文档编辑器依赖的静态资源：\n\n```text\nwww/js/zui3/editor/blocksuite/editor.umd.cjs\nwww/js/zui3/editor/blocksuite/editor.css\n```\n\n或者在 README / 发布说明中明确说明：GitHub tag 不是完整运行包，生产部署必须使用官方 release 包或额外构建前端资源。\n\n## 临时解决办法\n\n我目前从官方 `zentao-22.0-php8.1.tar.xz` 源码包中提取了：\n\n```text\nwww/js/zui3/editor/blocksuite/\n```\n\n补到部署目录后，又给 Apache 增加了 `.cjs` MIME 映射：\n\n```apache\n\nAddType application/javascript .cjs\n\n```\n\n之后验证：\n\n```text\nGET /js/zui3/editor/blocksuite/editor.umd.cjs\n20",
+  "url": "https://github.com/easysoft/zentaopms/issues/185",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-04-17T06:15:07Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 161,
+  "title": "富文本是否有可切换至普通文本的计划？",
+  "body": "### 描述 (Description)\n\n富文本编辑器在mac下的safari浏览器下工作几乎是无法输入\n\n### 期望 (Expectation)\n\n我的情况是用不到富文本的，希望是可以通过设置选择富文本编辑器还是普通文本编辑器\n\n### 结果 (Result)\n\n富文本难以输入文字\n\n### 软件版本 (Software version)\n\n21.1",
+  "url": "https://github.com/easysoft/zentaopms/issues/161",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2025-01-21T03:47:57Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 174,
+  "title": "21.7.4部分问题反馈",
+  "body": "### 描述 (Description)\n\n版本开源 21.7.4\n1. 老版本的迭代名称中包含& ,在升级到21.7.4以后被转译为&amp;\n2. 项目、产品仪表盘不更新数据\n3. 单个产品的仪表盘和总体产品仪表盘, “最新发布”逻辑不一致(一个现实最新,一个现实最早)\n4. 产品路线图-为啥里程碑的不显示在主路线上呢(没有显示规律)?\n\n\n### 期望 (Expectation)\n\n1.  不会被转译\n2. 更新最近统计数据\n3. 都更新为最新发布\n4. 这个到底已啥为准呢?\n\n### 结果 (Result)\n\n略\n\n### 软件版本 (Software version)\n\n21.7.4",
+  "url": "https://github.com/easysoft/zentaopms/issues/174",
+  "labels": [],
+  "closed_at": "2025-10-27T06:00:46Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 160,
+  "title": "文档模块中新建文档，图片附件无法显示",
+  "body": "### 描述 (Description)\n\n我是在demo里试用的，新建了一个测试文档，然后里面传了一个照片，保存后发现图片无法加载\r\n\r\n\n\n### 期望 (Expectation)\n\n文档里能看图片\n\n### 结果 (Result)\n\n目前不能看\n\n### 软件版本 (Software version)\n\n开源版 21.0",
+  "url": "https://github.com/easysoft/zentaopms/issues/160",
+  "labels": [],
+  "closed_at": "2024-11-22T09:54:02Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 145,
+  "title": "项目编辑项目负责人后，任务无法选团队其他人员",
+  "body": "### 描述 (Description)\n\n1、创建无迭代项目型项目，编辑项目负责人为其他人员，创建任务无法选择项目团队中其他人员\r\n\r\n\r\n只能选择这两个人，无法选到其它人\r\n\r\n\n\n### 期望 (Expectation)\n\n更改项目负责人，能正常进行项目任务创建\n\n### 结果 (Result)\n\n项目任务无法选择团队其它人员\n\n### 软件版本 (Software version)\n\n20.1.1",
+  "url": "https://github.com/easysoft/zentaopms/issues/145",
+  "labels": [],
+  "closed_at": "2024-08-14T09:07:43Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 141,
+  "title": "不定时重启",
+  "body": "### 描述 (Description)\n\n无法稳定复现。\r\n\r\n使用k8s部署的官方镜像，最近一段时间，监控总是报警，日志如下：\r\n```\r\n * Restarting periodic command scheduler cron\r\n * Stopping periodic command scheduler cron\r\n   ...done.\r\n * Starting periodic command scheduler cron\r\n   ...done.\r\n * Restarting Apache httpd web server apache2\r\n   ...done.\r\n * Stopping MariaDB database server mysqld\r\n   ...done.\r\n * Starting MariaDB database server mysqld\r\n   ...done.\r\nERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)\r\n```\r\n\r\n感觉容器内的进程，在不定时重启。\n\n### 期望 (Expectation)\n\n期望Zentao服务永远online，没有downtime。\n\n### 结果 (Result)\n\nZentao不定时无法访问。\n\n### 软件版本 (Software version)\n\n17.6.2",
+  "url": "https://github.com/easysoft/zentaopms/issues/141",
+  "labels": [
+   "wating"
+  ],
+  "closed_at": "2024-08-23T11:14:33Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 123,
+  "title": "禅道18.7版本产品-研发需求列表数据显示及样式问题",
+  "body": "\r\n问题一：升级到18.7 [创建者]【创建日期】【最后修改日期】列表字段数据不显示，18.6版本都是正常的\r\n问题二：升级到18.7后列表研发需求名称内容无法正常显示，18.6版本都是正常的，【执行】【任务】列表同样的问题\r\nPS：最近几个版本升级后都有基础功能之前正常的，升级后出现低级问题。",
+  "url": "https://github.com/easysoft/zentaopms/issues/123",
+  "labels": [
+   "bug",
+   "fixed"
+  ],
+  "closed_at": "2023-09-15T00:14:45Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 98,
+  "title": "禅道无法登录",
+  "body": "周末服务器断电，周一开工后重启zentao服务\r\n页面无法登录，日志提示ERROR] mariadbd: Table './zentao/zt_config' is marked as crashed and should be repaired\r\n按百度repair后还是无法登录，日志无反应，求助大神",
+  "url": "https://github.com/easysoft/zentaopms/issues/98",
+  "labels": [],
+  "closed_at": "2024-03-18T00:21:16Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 131,
+  "title": "禅道看板项目任务显示异常",
+  "body": "### 描述 (Description)\n\n**看板项目创建任务后不显示任务相关信息，也无法进行编辑和任务开始等节点处理**\r\n\r\n\n\n### 期望 (Expectation)\n\n显示项目名称等信息，可以进行编辑和任务节点处理\n\n### 结果 (Result)\n\n无法显示任务名称信息，也无法进行编辑，也无法进行任务开始和完成等节点操作\n\n### 软件版本 (Software version)\n\n18.10",
+  "url": "https://github.com/easysoft/zentaopms/issues/131",
+  "labels": [],
+  "closed_at": "2023-12-29T05:19:08Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 100,
+  "title": "需求无法调整与产品的关联",
+  "body": "提需求选错产品\r\n导入的需求无设置产品\r\n\r\n这些场景，都需要后续调整产品与需求的关联\r\n甚至可能多对多的关系，这里是如何考虑支持？",
+  "url": "https://github.com/easysoft/zentaopms/issues/100",
+  "labels": [],
+  "closed_at": "2023-03-24T12:43:59Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 111,
+  "title": "禅道18.3源码安装到第4步时无法继续",
+  "body": "禅道18.3源码安装，在执行到第4步时点击“使用轻量管理模式”或“使用全生命周期管理模式”按钮均无响应：\r\n\r\n\r\nchrome开发者工具的控制台提示如下错误:\r\nGEThttp://localhost/zentaopms/www/theme/default/en.default.css?v=18.3\r\n[HTTP/1.1 404 Not Found 0ms]\r\n\r\nGEThttp://localhost/zentaopms/www/js/all.js?v=18.3\r\n[HTTP/1.1 404 Not Found 0ms]\r\n\r\n指向“http://localhost/zentaopms/www/js/all.js?v=18.3”的  加载失败。 install.php:14:1\r\nUncaught ReferenceError: jQuery is not defined\r\n     jQuery\r\nmin.js:2:3\r\nUncaught ReferenceError: $ is not defined\r\n     http://localhost/zentaopms/www/install.php?m=install&f=step4:182\r\n\r\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/111",
+  "labels": [],
+  "closed_at": "2023-04-02T03:39:38Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 93,
+  "title": "添加开发需求 无法选择父需求",
+  "body": "父需求为选择框，但无内容",
+  "url": "https://github.com/easysoft/zentaopms/issues/93",
+  "labels": [],
+  "closed_at": "2022-10-13T05:32:22Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 79,
+  "title": "环境变量无效",
+  "body": "https://github.com/easysoft/zentaopms/blob/master/module/install/control.php\r\n\r\n即使设置MYSQL_USER,MYSQL_PASSWORD install 页面还是无法生效。无法读取container的环境变量",
+  "url": "https://github.com/easysoft/zentaopms/issues/79",
+  "labels": [],
+  "closed_at": "2022-09-14T03:09:53Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 56,
+  "title": "禅道设置通过git tag触发jenkins构建，但实际结果根据后台定时任务每5分钟触发一次构建，并没有按照tag的方式触发",
+  "body": "- git版本库禅道配置\r\n\r\n\r\n- git触发jenkins任务构建配置\r\n\r\n\r\n- 后台计划任务显示正常\r\n\r\n\r\n- 实际结果并未按照git tag触发构建，而是每5分钟触发一次\r\n\r\n\r\n- 同时jenkins任务构建失败\r\nStarted by user jiaxuefeng\r\nRunning as SYSTEM\r\nBuilding on master in workspace E:\\fengfeng\\work_tools\\MyJenkinsWorkSpace\\workspace\\ZTF-TestNg-Git\r\n[WS-CLEANUP] Deleting project workspace...\r\n[WS-CLEANUP] Deferred wipeout is used...\r\n[WS-CLEANUP] Done\r\nNo credentials specified\r\nCloning the remote Git repository\r\nCloning repository https://gitee.com/jjxff2000/ci_test_testng.git\r\n > git.exe init E:\\fengfeng\\work_tools\\MyJenkinsWorkSpace\\workspace\\ZTF-TestNg-Git # timeout=10\r\nFetching upstream changes from https://gitee.com/jjxff2000/ci_test_testng.git\r\n > git.exe --version # timeout=10\r\n > git.exe fetch --tags --force --progress https://gitee.com/jjxff2000/ci_test_testng.git +refs/heads/*:refs/remotes/origin/*\r\n > git.exe config remote.origin.url https://gitee.com/jjxff2000/ci_test_testng.git # timeout=10\r\n > git.exe config --add remote.origin.fetch +refs/head",
+  "url": "https://github.com/easysoft/zentaopms/issues/56",
+  "labels": [],
+  "closed_at": "2021-01-04T04:20:32Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 28,
+  "title": "客户端中的禅道浏览器无法复制地址",
+  "body": "在禅道11.0中提供了一个全新的暄暄作为客户端使用，并且提供了将禅道URL发到聊天窗口中即可转为卡片式消息，但是内置的禅道无法复制地址，也无法通过其他途径获得url，右键在浏览器中打开也没有一键登录功能，也就意味着如果需要发送卡片的话需要单独在浏览器中再次登录，那这样暄暄其实用处就不大了。",
+  "url": "https://github.com/easysoft/zentaopms/issues/28",
+  "labels": [],
+  "closed_at": "2019-07-24T02:31:41Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 197,
+  "title": "日期选择器在 UTC 以西的时区选中日期会少一天（zui createDate 按 UTC 解析纯日期串，zui 已修复，请同步）",
+  "body": "## 现象\n\n浏览器所在时区在 UTC 以西（例如 America/Edmonton，UTC-6；美洲各时区都会遇到）时，禅道里所有日期选择器选中的日期会变成前一天：在任务的「日程规划」里点 9 月 17 日，输入框里得到 `2026-09-16`。在 UTC+8 的环境下看不到这个问题，所以一直没被发现。\n\n版本：禅道开源版 22.5（`easysoft/zentao:22.5-20260821-php7`），21.7.1 同样存在。\n\n## 根因\n\n前端 zui3 的 `createDate()` 把纯日期字符串直接交给 `Date` 构造函数。按 ECMAScript 规范，`YYYY-MM-DD` 这种只有日期的 ISO 串会被当作 **UTC 零点**，在 UTC 以西的时区里就是本地的前一天：\n\n```js\n// 浏览器时区 America/Edmonton (UTC-6)，在禅道登录页控制台执行\nzui.createDate('2026-09-17')                  // Wed Sep 16 2026 18:00:00 GMT-0600\nzui.formatDate('2026-09-17', 'yyyy-MM-dd')   // \"2026-09-16\"\n```\n\n对应代码在禅道的 `www/js/zui3/zui.zentao.js` 里（zui 源码 `lib/helpers/src/date-helper.ts` 的 `createDate`）。服务端没有问题，通过 REST API 写入的 `deadline` 原样返回。\n\n## 上游修复\n\nzui 仓库已合并修复：https://github.com/easysoft/zui/pull/247（commit 8c7e2b2c222530c39b6f092640dbe023084f3dfd）。`createDate` 对匹配 `^\\d{4}-\\d{2}-\\d{2}$` 的字符串改为按本地零点构造，带时间的字符串、时间戳和 `Date` 对象行为不变，并附带了在多个时区下运行的单元测试。\n\n**请求**：把修复后的 zui 构建产物同步到 zentaopms 的 `www/js/zui3/zui.zentao.js`，并随下一个 22.x 发布。\n\n## 复现步骤\n\n1. 把操作系统时区设为 America/Edmonton（或任何 UTC 负偏移时区），打开禅道。\n2. 新建任务，在「日程规划」的结束日期里点选任意一天。\n3. 输入框显示的是前一天。\n\n## 临时绕过\n\n在容器启动时对 `zui.zentao.js` 做一处替换（日期串后追加 `T00:00:00`，让 JS 按本地时间解析），效果与上游修复一致；zui 同步后即可去掉。\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/197",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-09-06T09:33:42Z",
+  "quality": "high"
+ },
+ {
+  "issue_id": 204,
+  "title": "API v2: partial testcase edit can clear all steps when steps is omitted",
+  "body": "## 版本与接口\n\n禅道开源版 22.6，`PUT /api.php/v2/testcases/{caseID}`。对照 main `d5bfff8c91cea48018275381e0a127ed6fa5c79f`。MCP 只是转发路径，不是唯一受影响客户端。\n\n## 复现（仅使用临时测试用例）\n\n1. 准备有三步的用例。\n2. 仅提交 `{\"title\":\"Synthetic case\",\"precondition\":\"Updated condition\"}`，省略 steps、expects、stepType。\n3. 回读发现新版本 steps 为空。提交完整三组数组后可恢复。\n\n预期：未提交步骤时保留原内容、预期、类型、顺序及分组层级；标题或前置条件修改可按原规则生成新版本，但不能产生空步骤版本。\n\n## 原因\n\n表单给缺省 steps 填入 `array('')`。该数组为真，`updateStep()` 进入插入分支而不是复制旧步骤；`insertSteps()` 又跳过空描述，最终新版本未写入任何步骤。\n\n这与“提交 steps 但省略 stepType 丢失后续步骤”是不同触发场景。拟在 API v2 表单合并前恢复未提交的原步骤，并拒绝缺少 steps 却单独提交 expects/stepType 的不完整输入。\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/204",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-10-21T00:36:13Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 201,
+  "title": "API v2: partial task edit can unintentionally clear the linked story",
+  "body": "## 版本\n\nZenTao 开源版 22.6。当前 main `d5bfff8c91cea48018275381e0a127ed6fa5c79f` 的 `framework/api/router.class.php` 中仍存在相关表单合并逻辑。\n\n## 问题与复现\n\nAPI v2 对任务做局部编辑时，如果请求没有提交 `story`，从编辑页面提取的表单默认值可能将原有需求关联覆盖为 0。本问题可直接通过 REST API 触发，不依赖 MCP；经 MCP 转发的同类编辑同样受影响。\n\n使用测试任务复现，不要对重要任务直接测试：\n\n1. 创建已关联需求的任务，记录其 `story` 和 `storyVersion`。\n2. 使用有编辑权限的账号调用 `PUT /api.php/v2/tasks/{taskID}`，请求体仅为 `{\"desc\":\"Updated description\"}`，不包含 `story`。\n3. 重新读取任务并查看修改历史。\n4. 在受影响场景中，描述更新成功，但 `story` 被清为 0，相关版本信息也被重置。\n\n预期：未提交 `story` 时保留现有需求关联；只有显式提交 `{\"story\":0}` 才解除关联。\n\n## 原因\n\n`api::setFormData()` 保存请求参数后，调用编辑页面收集 `formData`，再把缺省字段补入 `$_POST`。当编辑表单给出的 `story` 默认值为 0 时，省略字段与明确解除关联被混淆。随后任务编辑逻辑按这个值处理需求关联及版本。\n\n## 修复建议\n\n限定于 API v2、PUT、task/edit：在表单合并后、继续业务处理前，检查原请求参数是否包含 `story`。若未包含，则读取现有任务并恢复其 `story`；保留显式提交值及现有权限检查顺序，不全局更改其他表单的合并规则。\n\n已准备对应补丁和无需数据库的表单合并回归测试。集成回归覆盖描述/名称局部编辑、显式解除关联、重新关联以及关联版本保持；公开示例仅使用合成数据。\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/201",
+  "labels": [
+   "invalid"
+  ],
+  "closed_at": "2026-10-21T00:35:26Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 184,
+  "title": "API v2 POST /files returns 'module file has no create method'",
+  "body": "### 问题描述\n\n按照官方文档调用 API v2 上传附件时，`POST /api.php/v2/files` 返回路由错误：\n\n```text\nthe module file has no create method\n```\n\n官方文档：\nhttps://www.zentao.net/book/api/post-files-2325.html\n\n文档字段表中 `objectType` 标注为 `string`，说明包含 `story` / `bug` / `task` / `testcase` 等对象类型；但同页请求示例里写的是 `objectType: 1`。我分别测试了 `story` 和 `1`，结果都失败。\n\n### 环境\n\n- ZenTao version: 21.7.9\n- API: v2\n- Endpoint: `/api.php/v2/files`\n- Auth: API token header\n\n### 复现步骤\n\n用 Story 对象测试上传附件：\n\n```bash\ncurl -X POST \"https://example.com/api.php/v2/files\" \\\n  -H \"token: \" \\\n  -F \"file=@需求说明文档.md\" \\\n  -F \"objectType=story\" \\\n  -F \"objectID=3411\"\n```\n\n也测试了文档示例中的数字写法：\n\n```bash\ncurl -X POST \"https://example.com/api.php/v2/files\" \\\n  -H \"token: \" \\\n  -F \"file=@需求说明文档.md\" \\\n  -F \"objectType=1\" \\\n  -F \"objectID=3411\"\n```\n\n另外也测试了 `/api.php/v2/file`，结果一致。\n\n### 实际结果\n\n返回 HTTP 200，但响应内容是框架路由错误：\n\n```text\n#0 framework/base/router.class.php(1734): baseRouter->triggerError()\n#1 framework/api/router.class.php(680): baseRouter->getDefaultParams()\n#2 framework/api/router.class.php(555): api->setParams()\n#3 www/api.php(57): api->loadModule()\n#4 {main}\nERROR: the module file has no create method in framework/base/router.class.php on line 1734, last called by framework/api/router.class.php on line 680 through function getDefaultParams.\n```\n\n### 预期结果\n\n`POST /api.php/v2/files` 应该按文档创建附件，并返回文件 ID / URL 等信息。\n\n### 需要确认的问题\n\n1. `objectType` 对 Story 附件上传到底应该传 `story`，还是文档示例中的数字值 `1`？\n2. 当前文档中字段表和请求示例是否不一致？\n3. 21.7.9 中 `/api.php/v2/files` 是否缺少 crea",
+  "url": "https://github.com/easysoft/zentaopms/issues/184",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2026-04-24T00:54:02Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 170,
+  "title": "任务按条件搜索报错-21.6beat",
+  "body": "### 描述 (Description)\n\n，项目下任务，按指派人查询就报错\n\n### 期望 (Expectation)\n\n下个版本能修复吗？\n\n### 结果 (Result)\n\n目前已是最新版本，等待未来版本修复\n\n### 软件版本 (Software version)\n\n21.6-beat",
+  "url": "https://github.com/easysoft/zentaopms/issues/170",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2025-04-11T11:27:13Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 133,
+  "title": "There is a remote command execution vulnerability after login（存在后台远程命令执行漏洞）",
+  "body": "### 描述 (Description)\n\n详情见：“https://github.com/l3s10n/ZenTaoPMS_RCE”\n\n### 期望 (Expectation)\n\n修复漏洞\n\n### 结果 (Result)\n\n后台命令执行\n\n### 软件版本 (Software version)\n\n18.0 - 18.10",
+  "url": "https://github.com/easysoft/zentaopms/issues/133",
+  "labels": [
+   "fixed",
+   "security"
+  ],
+  "closed_at": "2024-05-31T10:54:25Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 169,
+  "title": "头像修剪无效",
+  "body": "### 描述 (Description)\n\n上传头像的时候框选了范围，但是确认后显示的是全图\n\n### 期望 (Expectation)\n\n修复Bug\n\n### 结果 (Result)\n\n如上\n\n### 软件版本 (Software version)\n\n21.5",
+  "url": "https://github.com/easysoft/zentaopms/issues/169",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2025-06-11T05:28:05Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 168,
+  "title": "备份设置了不备份代码不生效",
+  "body": "### 描述 (Description)\n\n设置了不备份代码和附件，但是今天页面登不上，一看服务器满了，原来是代码依旧在备份（我设置的备份频率比较高）\n\n### 期望 (Expectation)\n\n期望修复\n\n### 结果 (Result)\n\n目前手动清空备份并把保留的期限调低，观望\n\n### 软件版本 (Software version)\n\n21.5",
+  "url": "https://github.com/easysoft/zentaopms/issues/168",
+  "labels": [
+   "invalid"
+  ],
+  "closed_at": "2025-03-24T02:54:47Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 172,
+  "title": "合并产品分支报错",
+  "body": "### 描述 (Description)\n\n合并产品分支到主干\n\n### 期望 (Expectation)\n\n不应该报错\n\n### 结果 (Result)\n\n会报“POST: /branch-mergeBranch-1.html\nError: JSON.parse: unexpected end of data at line 1 column 1 of the JSON data\nResponse:”\n\n### 软件版本 (Software version)\n\n21.7.3",
+  "url": "https://github.com/easysoft/zentaopms/issues/172",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2025-07-29T06:29:28Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 153,
+  "title": "ERROR: SQLSTATE[23000]: Integrity constraint violation: 1052 Column 'storyTitle' in order clause is ambiguous ",
+  "body": "### 描述 (Description)\n\n执行--->研发，在基于任务需求筛选的时候直接报SQL操作\r\n\r\n\r\n18:47:45 #0 lib/base/dao/dao.class.php(1652): baseRouter->triggerError('SQLSTATE[23000]...', 'li...', 1652, true)\r\n#1 lib/base/dao/dao.class.php(951): baseDAO->sqlError(Object(PDOException))\r\n#2 lib/base/dao/dao.class.php(1104): baseDAO->query('SELECT DISTINCT...')\r\n#3 module/task/tao.php(538): baseDAO->fetchAll('id')\r\n#4 module/task/model.php(1640): taskTao->fetchExecutionTasks(29, 0, 'all', Array, 'storyTitle_asc,...', Object(pager))\r\n#5 module/execution/model.php(2019): taskModel->getExecutionTasks(29, 0, 'all', Array, 'storyTitle_asc,...', Object(pager))\r\n#6 module/execution/control.php(156): executionModel->getTasks(0, 29, Array, 'all', 0, 0, 'storyTitle_asc,...', Object(pager))\r\n#7 framework/base/router.class.php(2479): execution->task(29, 'all', '0', 'storyTitle_asc', '54', '100', '1')\r\n#8 framework/router.class.php(769): baseRouter->loadModule()\r\n#9 www/index.php(88): router->loadModule()\r\n#10 {main}ERROR: SQLSTATE[23000]: Integrity constraint violation: 1052 Column 'storyTitle' in order clause is ambiguous ,the sql is: 'SELECT DISTINCT t1.*, t2.id AS storyID, t2.title AS storyTitle, t2.product, t2.branch, t2.version AS latestStoryVersion, t2.status AS storyStatus, IF(t1.`pri` = 0, 256, t1.`pri`) as priOrder FROM `zt_task` AS t1 LEFT JOIN `zt_story` AS t2 ON t1.story = t2.id LEFT JOIN `zt_taskteam` AS t3 ON t3.task = t1.id wHeRe t1.execution = '29' AND t1.deleted = '0' oRdEr bY `storyTitle` asc,`id` asc '\r\nThe s",
+  "url": "https://github.com/easysoft/zentaopms/issues/153",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2024-10-04T02:37:49Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 162,
+  "title": "使用备份迁移数据后访问域名会显示开源版和修改版本字样",
+  "body": "### 描述 (Description)\n\n在从docker环境的备份放到新的机器上 使用一键部署方式恢复相关mysql数据和upload目录后。直接访问相关域名 会跳到初始化页面 ，就是显示开源版本和修改版本的那个位置，如下图。\r\n\r\n\n\n### 期望 (Expectation)\n\n直接跳转到登陆页面\n\n### 结果 (Result)\n\n目前是初始化页面应该是\n\n### 软件版本 (Software version)\n\n20.1.1",
+  "url": "https://github.com/easysoft/zentaopms/issues/162",
+  "labels": [],
+  "closed_at": "2024-12-04T02:43:02Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 156,
+  "title": "任务列表在按需求排序后，查看任务详情SQL查询出错",
+  "body": "### 描述 (Description)\r\n\r\n1. 任务列表页，点击 “研发需求”排序:\r\n\r\n2. 点击任务名称查看详情:\r\n\r\n3. 任务详情页报错，不能显示:\r\n\r\n排序的字段 \"storyTitle\" 不在查询的字段中。\r\n\r\n### 期望 (Expectation)\r\n\r\n正确显示任务详情页。\r\n\r\n### 结果 (Result)\r\n\r\n页面加载失败,出现错误堆栈信息。\r\n\r\n### 软件版本 (Software version)\r\n\r\n20.8",
+  "url": "https://github.com/easysoft/zentaopms/issues/156",
+  "labels": [],
+  "closed_at": "2024-11-21T05:35:49Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 124,
+  "title": "禅道18.7开源版-文档模块中的文档动态未遵循后台权限文档可查看动态设置",
+  "body": "系统管理员 设置 “后台” -> \"人员管理\" -> \"权限\" -> 选中某一角色设置“视野维护\"，取消所有”可查看动态“，包括”文档“部分，但相应角色登录后，\"文档\"主页中，”文档动态“仍显示相关动态信息，但其他页面其动态都已正常显示\"暂无数据\"。\r\n\r\n附图1 - 文档的动态设置被关闭\r\n\r\n\r\n附图2 - 仍显示文档动态\r\n\r\n\r\n附图3 - 首页最新动态正常不显示数据\r\n\r\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/124",
+  "labels": [
+   "bug",
+   "processing"
+  ],
+  "closed_at": "2024-11-21T05:38:50Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 152,
+  "title": "多人并行任务重新指派人员，原先已经启动的人员状态又变成未开始",
+  "body": "### 描述 (Description)\n\n重新指派人员，点击保存，之前已经启动的人员任务状态又变成未开始\r\n\r\n\n\n### 期望 (Expectation)\n\n之前人员状态保持不变\n\n### 结果 (Result)\n\n已经启动的状态变成了未开始\n\n### 软件版本 (Software version)\n\n20.3.0",
+  "url": "https://github.com/easysoft/zentaopms/issues/152",
+  "labels": [],
+  "closed_at": "2024-11-07T05:46:08Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 157,
+  "title": "任务修改实际时间没有效果，还是原来的实际时间",
+  "body": "### 描述 (Description)\n\n在任务中进行编辑，修改任务的实际开始时间，点击保存后没有生效，还是原来的实际开始时间\n\n### 期望 (Expectation)\n\n希望能够正常修改\n\n### 结果 (Result)\n\n希望能够正常修改\n\n### 软件版本 (Software version)\n\n20.3.0",
+  "url": "https://github.com/easysoft/zentaopms/issues/157",
+  "labels": [],
+  "closed_at": "2024-10-30T09:50:54Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 148,
+  "title": "多人并行任务添加人员点击保存按钮无反应",
+  "body": "### 描述 (Description)\n\n项目任务视图，创建任务，选择多人并行任务，添加人员点击保存按钮无效，刷新浏览器后可以正常添加人员\r\n\r\n\n\n### 期望 (Expectation)\n\n可以正常添加人员\n\n### 结果 (Result)\n\n必须要刷新后才能添加人员，从项目任务进去添加保存无反应\n\n### 软件版本 (Software version)\n\n20.3.0",
+  "url": "https://github.com/easysoft/zentaopms/issues/148",
+  "labels": [],
+  "closed_at": "2024-08-26T02:53:32Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 121,
+  "title": "禅道18.6创建任务提示截止时间不能小于开始时间",
+  "body": "创建任务时提示截止时间不能小于开始时间，但在编辑该任务时又是可以的。正常创建任务时截止时间大于等于开始时间，应和编辑任务时判断保持一致。这个问题很紧急，能够临时修复下。\r\n\r\n\r\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/121",
+  "labels": [
+   "bug",
+   "fixed"
+  ],
+  "closed_at": "2023-09-05T05:04:28Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 144,
+  "title": "禅道20.1.0版本项目编辑报错",
+  "body": "### 描述 (Description)\n\n编辑项目提交无任何反应，不是所有项目都这样，部分项目这样，控制台报错\r\n\r\n\r\n\r\n 创建任务时，选不到人\r\n\r\n\r\n\n\n### 期望 (Expectation)\n\n所有项目都能正常操作\n\n### 结果 (Result)\n\n上次提的问题未解决\n\n### 软件版本 (Software version)\n\n20.1.0",
+  "url": "https://github.com/easysoft/zentaopms/issues/144",
+  "labels": [],
+  "closed_at": "2024-08-14T09:08:17Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 137,
+  "title": "固定会话问题",
+  "body": "### 描述 (Description)\n\n禅道会使用url请求中的sessionid 存储session。\r\n\r\n\r\n\r\n当攻击者构造如下url 发给受害者。\r\nhttp://localhost:8082/index.php?m=user&f=login&referer=L2luZGV4LnBocA==&zentaosid=plbrj2g4lnngg2d6us5e7vm123\r\n\r\n受害者使用此链接登录。受害者的身份信息已固定在此sessionid中。\r\n\r\n\r\n\r\n攻击者修改sessionid，即可直接进入后台。\r\n\n\n### 期望 (Expectation)\n\n修复漏洞\n\n### 结果 (Result)\n\n尚未修复\n\n### 软件版本 (Software version)\n\n18.12",
+  "url": "https://github.com/easysoft/zentaopms/issues/137",
+  "labels": [
+   "bug"
+  ],
+  "closed_at": "2024-05-13T08:48:09Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 142,
+  "title": "禅道升级到20.1后问题",
+  "body": "### 描述 (Description)\n\n问题1：项目型项目，创建研发需求表单字段没有所属计划，提交时提示请选择所属计划\r\n\r\n\r\n问题2：项目型项目，历史的项目编辑项目描述后，再次编辑点击点击提交按钮没反应，控制台报错，创建研发需求提示该迭代没有关联的产品，系统将转到产品关联页面\r\n\r\n\r\n\n\n### 期望 (Expectation)\n\n1、项目型项目不需要添加此校验，禅道18无此问题\r\n2、历史项目能够正常进行编辑和创建研发需求\n\n### 结果 (Result)\n\n无结果\n\n### 软件版本 (Software version)\n\n20.1.0",
+  "url": "https://github.com/easysoft/zentaopms/issues/142",
+  "labels": [
+   "bug"
+  ],
+  "closed_at": "2024-06-21T01:02:54Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 126,
+  "title": "文档查看页面加载特别长",
+  "body": "版本18.7\r\n\r\n\r\n\r\n\r\n修改 进入速度正常",
+  "url": "https://github.com/easysoft/zentaopms/issues/126",
+  "labels": [],
+  "closed_at": "2024-03-18T00:23:27Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 140,
+  "title": "页面点击报错",
+  "body": "### 描述 (Description)\n\n设置页面显示条数后，出现报错\n\n### 期望 (Expectation)\n\n正常显示\n\n### 结果 (Result)\n\n\r\n\n\n### 软件版本 (Software version)\n\n20.0",
+  "url": "https://github.com/easysoft/zentaopms/issues/140",
+  "labels": [],
+  "closed_at": "2024-06-03T02:39:02Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 120,
+  "title": "禅道项目空间提研发需求提示【所属计划】不能为空",
+  "body": "项目空间提的研发需求没有【所属计划】字段，不应该做该字段的校验\r\n\r\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/120",
+  "labels": [
+   "bug",
+   "fixed"
+  ],
+  "closed_at": "2023-08-09T09:19:56Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 91,
+  "title": "执行看板样式错乱",
+  "body": "执行看板样式错乱，版本号：17.6.2\r\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/91",
+  "labels": [],
+  "closed_at": "2022-10-13T05:29:34Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 1,
+  "title": "禅道安全漏洞",
+  "body": "http://www.wooyun.org/bugs/wooyun-2015-0151486\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/1",
+  "labels": [],
+  "closed_at": "2015-11-04T01:46:53Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 22,
+  "title": "请问github的和sourceforge不是同一套代码对吗？",
+  "body": "我以前都是在你们开源官网下载\r\n下载站点1：http://sourceforge.net/projects/zentao/files/9.8.3/ZenTaoPMS.9.8.3.zip/download\r\n\r\n今天我fork一个git到本地，和我在用的代码比较后发现差异非常大，两套系统是不同团队在维护开发吗？",
+  "url": "https://github.com/easysoft/zentaopms/issues/22",
+  "labels": [],
+  "closed_at": "2018-04-24T02:08:08Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 14,
+  "title": "重新设置公司名后每日提醒邮件的title还是老的名字",
+  "body": "举例：原公司名称是：“公司A”\r\n\r\n即使之后修改了公司名称为：“公司B”\r\n\r\n在邮件提醒中显示的公司名还是 “公司A”，但是指派任务发送的邮件显示的是新公司“公司B”\r\n\r\n估计：是初始化项目设置公司的时候有配置文件记录了公司A，每日提醒邮件使用的是配置文件",
+  "url": "https://github.com/easysoft/zentaopms/issues/14",
+  "labels": [],
+  "closed_at": "2017-10-27T06:30:22Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 163,
+  "title": "20.1.1升级到21.1报错",
+  "body": "### 描述 (Description)\n\n在执行Upgrade.php过程中 ,提示如下错误\r\n\r\n\r\n\r\n\r\nSQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '2-bug-confirm' for key 'group' ,the sql is: '\r\nUPDATE `zt_grouppriv` SET `method` = 'confirm' WHERE `module` = 'bug' AND `method` = 'confirmBug''\r\nSQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '8-testcase-batchChangeType' for key 'group' ,the sql is: '\r\nUPDATE `zt_grouppriv` SET `method` = 'batchChangeType' WHERE `module` = 'testcase' AND `method` = 'batchCaseTypeChange''\r\n\r\n\r\n\n\n### 期望 (Expectation)\n\n正常升级\n\n### 结果 (Result)\n\n正常升级\n\n### 软件版本 (Software version)\n\n20.1.1",
+  "url": "https://github.com/easysoft/zentaopms/issues/163",
+  "labels": [
+   "fixed"
+  ],
+  "closed_at": "2024-12-04T06:27:14Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 155,
+  "title": "打开测试页面响应慢",
+  "body": "### 描述 (Description)\n\n登录后打开测试页面，白屏约20秒后才会出现内容，使用浏览器控制台发现在请求zentao/qa.html?zin=1地址耗费约17秒后返回302，求问如何解决？\n\n### 期望 (Expectation)\n\n页面能够快速打开\n\n### 结果 (Result)\n\n页面打开白屏缓慢\n\n### 软件版本 (Software version)\n\n_No response_",
+  "url": "https://github.com/easysoft/zentaopms/issues/155",
+  "labels": [],
+  "closed_at": "2024-10-08T03:34:22Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 149,
+  "title": "需求详情页中建任务，跳转页面错误",
+  "body": "### 描述 (Description)\r\n\r\n项目需求空间，点击某一条需求进入需求详情，点击创建任务跳转到创建执行页面\r\n\r\n\r\n\r\n### 期望 (Expectation)\r\n\r\n跳转到创建任务页面\r\n\r\n### 结果 (Result)\r\n\r\n目前都是跳转到创建执行页面\r\n\r\n### 软件版本 (Software version)\r\n\r\n20.3.0",
+  "url": "https://github.com/easysoft/zentaopms/issues/149",
+  "labels": [],
+  "closed_at": "2024-08-26T02:52:23Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 46,
+  "title": "客户端报错后，一致卡在错误界面，无返回主页、返回上一页或刷新界面",
+  "body": "\r\n",
+  "url": "https://github.com/easysoft/zentaopms/issues/46",
+  "labels": [],
+  "closed_at": "2020-04-28T05:25:28Z",
+  "quality": "low"
+ },
+ {
+  "issue_id": 18,
+  "title": "git pull origin master 跟新到9.7版本报错： Unknown column 't3.type' in 'where clause ",
+  "body": "解决方法：\r\n`SET SQL_MODE='ALLOW_INVALID_DATES';\r\nALTER TABLE `zt_team` ADD `type` enum('project','task') NOT NULL DEFAULT 'project' FIRST;\r\nALTER TABLE `zt_team` ADD `root` mediumint(8) unsigned NOT NULL default '0' FIRST;\r\n\r\nALTER TABLE `zt_team` DROP PRIMARY KEY;\r\nALTER TABLE `zt_team` DROP `project`;\r\nALTER TABLE `zt_team` DROP `task`;\r\n`\r\n\r\n错误信息：\r\n`\r\n10:31:53 ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 't3.type' in 'where clause'The sql is: SELECT distinct t1.id FROM `zt_product` AS t1 LEFT JOIN `zt_projectproduct` AS t2 ON t1.id = t2.product LEFT JOIN `zt_team` AS t3 ON t2.project = t3.root LEFT JOIN `zt_project` AS t4 ON t2.project = t4.id wHeRe t1.acl = 'open' OR (t1.acl = 'custom' AND (INSTR(CONCAT(',', t1.whitelist, ','), ',1,') > 0 OR INSTR(CONCAT(',', t1.whitelist, ','), ',6,') > 0 OR INSTR(CONCAT(',', t1.whitelist, ','), ',9,') > 0)) OR t1.PO = 'leeyi' OR t1.QD = 'leeyi' OR t1.RD = 'leeyi' OR t1.createdBy = 'leeyi' OR t3.account = 'leeyi' AND t1.deleted = '0' AND t3.type = 'project' AND t4.deleted = '0' in /var/www/zentaopms/lib/base/dao/dao.class.php on line 1388, last called by /var/www/zentaopms/lib/base/dao/dao.class.php on line 706 through function sqlError.\r\nin /var/www/zentaopms/framework/base/router.class.php on line 2195 when visiting /index.php?m=block&f=printBlock&id=18&module=my\r\n\r\n10:31:53 ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'root' in 'field list'The sql is: SELECT root, account FROM `zt_team` wHeRe ty",
+  "url": "https://github.com/easysoft/zentaopms/issues/18",
+  "labels": [],
+  "closed_at": "2018-01-03T03:02:55Z",
+  "quality": "low"
+ }
+]

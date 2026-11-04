@@ -205,8 +205,11 @@ def finalize(state: dict) -> dict:
     所有终止路径都汇到这里（包括 execute 全部通过、无 bug 可建）。
     """
     from agent.finalize import finalize as finalize_impl
+    summary = dict(state["run_summary"])
+    summary["failures"] = [{"case_id": f.get("case_id"), "phase": f.get("phase")}
+                           for f in state.get("failures", [])]
     report = finalize_impl(state["run_id"], state.get("bugs_to_create", []),
-                           state["run_summary"], state.get("bugs_linked"))
+                           summary, state.get("bugs_linked"))
     state["report"] = report
     state["report_path"] = settings.report_dir / f"report-{state['run_id']}.json"
     return state

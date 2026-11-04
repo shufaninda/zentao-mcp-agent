@@ -9,35 +9,51 @@
       "path": "/api.php/v1/executions/4/tasks",
       "json_body": {
         "name": "golden-length-aaaaaaaaaaaaaaaaaaaaaa",
-        "assignedTo": ["admin"],
+        "assignedTo": [
+          "admin"
+        ],
         "type": "devel",
         "pri": 3,
         "estStarted": "2026-11-03",
         "deadline": "2026-11-10"
       }
     },
-    "expect": { "status": 400 },
-    "cleanup": [{ "method": "DELETE", "path": "/api.php/v1/tasks/{id}" }]
+    "expect": {
+      "status": 400
+    },
+    "cleanup": [
+      {
+        "method": "DELETE",
+        "path": "/api.php/v1/tasks/{id}"
+      }
+    ]
   },
   {
     "id": "BUG_EMPTY_001",
     "desc": "任务名称为空（L2 补丁注入后应创建成功，即校验失效）",
     "dimension": "eq_invalid",
     "auth": "admin",
-    "no_cleanup_reason": "期望被校验拒绝；仅当注入补丁生效时才会建出数据，此时由 DRILL 清理流程处理",
+    "no_cleanup_reason": "干净版被正确拒绝(200 fail-body)；注入版才会建数据",
     "request": {
       "method": "POST",
       "path": "/api.php/v1/executions/4/tasks",
       "json_body": {
         "name": "",
-        "assignedTo": ["admin"],
+        "assignedTo": [
+          "admin"
+        ],
         "type": "devel",
         "pri": 3,
         "estStarted": "2026-11-03",
         "deadline": "2026-11-10"
       }
     },
-    "expect": { "status": 400 }
+    "expect": {
+      "status": 200,
+      "body_eq": {
+        "result": "fail"
+      }
+    }
   },
   {
     "id": "DEP_A_001",
@@ -50,22 +66,65 @@
       "path": "/api.php/v1/executions/4/tasks",
       "json_body": {
         "name": "golden-dep-drill",
-        "assignedTo": ["admin"],
+        "assignedTo": [
+          "admin"
+        ],
         "type": "devel",
         "pri": 3,
         "estStarted": "2026-11-03",
         "deadline": "2026-11-10"
       }
     },
-    "expect": { "status": 201, "body_has": ["id"] }
+    "expect": {
+      "status": 201,
+      "body_has": [
+        "id"
+      ]
+    }
   },
   {
     "id": "DEP_B_001",
     "desc": "依赖演练 B：查询固定 id 2（数据被 A 类用例动过时 404）",
     "dimension": "error",
     "auth": "admin",
-    "depends_on": ["DEP_A_001"],
-    "request": { "method": "GET", "path": "/api.php/v1/tasks/2" },
-    "expect": { "status": 200, "body_has": ["id"] }
+    "depends_on": [
+      "DEP_A_001"
+    ],
+    "request": {
+      "method": "GET",
+      "path": "/api.php/v1/tasks/2"
+    },
+    "expect": {
+      "status": 200,
+      "body_has": [
+        "id"
+      ]
+    }
+  },
+  {
+    "id": "BUG_TITLE_001",
+    "desc": "建 Bug 标题为空应被拒绝（L2 注入后应创建成功，即校验失效）",
+    "dimension": "eq_invalid",
+    "auth": "admin",
+    "no_cleanup_reason": "预期被校验拒绝；仅当注入生效时才建数据，由 DRILL 清理处理",
+    "request": {
+      "method": "POST",
+      "path": "/api.php/v1/bugs",
+      "json_body": {
+        "product": 1,
+        "title": "",
+        "type": "codeerror",
+        "severity": 3,
+        "pri": 3,
+        "steps": "golden",
+        "openedBuild": "trunk"
+      }
+    },
+    "expect": {
+      "status": 200,
+      "body_eq": {
+        "result": "fail"
+      }
+    }
   }
 ]
