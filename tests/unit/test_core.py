@@ -237,3 +237,26 @@ class TestLangGraphStateContract:
         edges = {(e.source, e.target) for e in app.get_graph().edges}
         assert ("validate", "generate") in edges
         assert ("validate", "execute") in edges
+
+
+class TestCLIDelegatesToGraph:
+    """CLI 主入口不能退回顺序直调节点（那样等于没用 LangGraph）。"""
+
+    def test_both_modes_invoke_compiled_graph(self, monkeypatch):
+        import agent.graph as graph_mod
+        import agent.orchestrator as orch
+
+        seen = []
+
+        class FakeApp:
+            def invoke(self, state):
+                return {**state, "via_graph": True}
+
+        def fake_build(mode):
+            seen.append(mode)
+            return FakeApp()
+
+        monkeypatch.setattr(graph_mod, "build_graph", fake_build)
+        assert orch.run_regression({"run_id": "x"})["via_graph"] is True
+        assert orch.run("explore", {"run_id": "y"})["via_graph"] is True
+        assert seen == ["regression", "explore"]

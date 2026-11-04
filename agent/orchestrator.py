@@ -1,11 +1,13 @@
-"""编排器 —— week2 用顺序调用跑通全部节点；week3 graph.py 用 LangGraph 接同样的节点。
+"""CLI 编排器 —— 唯一入口，实际执行走 LangGraph 编译图（agent/graph.py）。
 
 用法：
     python -m agent.orchestrator --task manual_baseline
     python -m agent.orchestrator --task golden --cases data/golden/golden_cases.json
+    python -m agent.orchestrator --task explore_demo --explore   # 需 LLM key
 
-回归模式（默认）：intake → execute → triage → dedup → finalize
-探索模式（--explore，week3，需 LLM key）：intake → retrieve → generate → validate → ...
+回归模式（默认，无环 DAG）：intake → execute → triage → dedup → finalize
+探索模式（有界回环）：intake → retrieve → generate → validate ⇄ generate(≤2) → ...
+节点实现在 agent/nodes.py；图结构与 State schema 在 graph.py / state.py。
 """
 from __future__ import annotations
 
@@ -24,17 +26,19 @@ def build_run_id(task: str) -> str:
 
 
 def run_regression(state: dict) -> dict:
-    """回归模式：用例已存在（人工/AI 都行），只跑执行→归因→落档。"""
-    from agent import nodes
+    """回归模式：用例已存在（人工/AI 都行），只跑执行→归因→落档。
 
-    nodes.intake(state)
-    if state.get("error"):
-        return state
-    nodes.execute(state)
-    nodes.triage(state)
-    nodes.dedup(state)
-    nodes.finalize(state)
-    return state
+    走 LangGraph 编译图，而不是顺序直调节点——条件分支、State schema
+    校验、后续接 checkpoint 都由框架保证。返回 invoke 合并后的新 state。
+    """
+    from agent.graph import build_graph
+    return build_graph("regression").invoke(state)
+
+
+def run(mode: str, state: dict) -> dict:
+    """CLI 唯一执行入口：mode = regression | explore。"""
+    from agent.graph import build_graph
+    return build_graph(mode).invoke(state)
 
 
 def main() -> int:
@@ -51,24 +55,29 @@ def main() -> int:
         "cases_path": cases,
         "patches_hash": _patches_hash(),
     }
+    mode = "explore" if args.explore else "regression"
     trace.set_run_id(state["run_id"])
-    print(f"[run] {state['run_id']}  patches={state['patches_hash'] or 'clean'}")
+    print(f"[run] {state['run_id']}  mode={mode}  patches={state['patches_hash'] or 'clean'}")
 
     try:
-        run_regression(state)
+        final = run(mode, state)          # ← 真正的 LangGraph invoke
     except Exception as e:  # noqa: BLE001
-        state["error"] = f"{type(e).__name__}: {e}"
-        print(f"[run] 编排失败: {state['error']}")
+        print(f"[run] 编排失败: {type(e).__name__}: {e}")
         return 1
 
-    report = state.get("report", {})
+    # invoke 返回合并后的新 state，不能再读原 state
+    report = final.get("report", {})
+    summary = dict(final.get("run_summary", {}))
+    summary["coverage_incomplete"] = final.get("coverage_incomplete", False)
+    summary["retry_count"] = final.get("retry_count", 0)
     print(json.dumps({
-        "run_id": state["run_id"],
-        "summary": state.get("run_summary", {}),
+        "run_id": final["run_id"],
+        "mode": mode,
+        "summary": summary,
         "bugs_created": [b["bug_id"] for b in report.get("bugs_created", [])],
         "bugs_linked": [(b["fp"], b.get("bug_id")) for b in report.get("bugs_linked", [])],
         "recorded_only": len(report.get("bugs_recorded_only", [])),
-        "report": str(state.get("report_path", "")),
+        "report": str(final.get("report_path", "")),
     }, ensure_ascii=False, indent=2))
     return 0
 

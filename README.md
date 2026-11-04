@@ -10,7 +10,8 @@ LLM 只产出**数据**（用例 JSON）和**判断**（归因投票），不产
 ## 架构
 
 ```
-L0 触发   CLI: python -m agent.orchestrator --task manual_baseline
+L0 触发   CLI: python -m agent.orchestrator --task manual_baseline [--explore]
+          → 主入口 invoke(build_graph(mode))，不是顺序直调节点
 L1 编排   LangGraph StateGraph(AgentState)（8 节点 / 2 条件分支）
           regression = 无环 DAG；explore = validate→generate 有界回环（retry≤2）
 L2 能力   pytest subprocess（声明式解释器）· MCP server（6 工具）· LLM · RAG
