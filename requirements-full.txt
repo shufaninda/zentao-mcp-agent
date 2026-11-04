@@ -1,6 +1,5 @@
 # 完整版（本地开发 / 探索模式）
 -r requirements.txt
-langgraph>=0.2
 fastmcp>=2.0
 chromadb>=0.5
 # ragas>=0.2      # 指标已用 eval/metrics.py 纯函数实现，非必需

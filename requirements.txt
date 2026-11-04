@@ -10,3 +10,4 @@ loguru>=0.7
 jieba>=0.42
 rank-bm25>=0.2
 allure-pytest>=2.13
+langgraph>=0.2        # 编排骨架：graph.py / StateGraph 契约单测在 CI 也要真跑
