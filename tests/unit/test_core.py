@@ -140,3 +140,67 @@ class TestTriage:
                              repro={"stable": True, "results": [{}]},
                              open_bug_exists=False)
         assert tri.category == "uncertain"
+
+
+class TestAuthBypass:
+    def test_403_to_200_is_product_bug(self):
+        """L3 实测教训：权限被绕过但被业务校验挡住，也必须判 product_bug。"""
+        from agent.triage import triage_failure
+        f = {"case_id": "BUG_PRIV_001", "phase": "call",
+             "evidence": {"expected": "403", "actual": "200",
+                          "snapshot": '{"result":"fail","message":{"password":[]}}'}}
+        case = _validated(id="BUG_PRIV_001", dimension="auth")
+        tri = triage_failure(f, case=case, repro={"stable": True, "results": [{}]},
+                             open_bug_exists=False)
+        assert tri.category == "product_bug"
+
+    def test_business_fail_without_bypass_still_case_issue(self):
+        from agent.triage import triage_failure
+        f = {"case_id": "TASK_002", "phase": "call",
+             "evidence": {"expected": "400", "actual": "200",
+                          "snapshot": '{"result":"fail"}'}}
+        tri = triage_failure(f, case=_validated(),
+                             repro={"stable": True, "results": [{}]},
+                             open_bug_exists=False)
+        assert tri.category == "case_issue"
+
+
+class TestMetrics:
+    def test_detection_by_level(self):
+        from eval.metrics import detection_rate
+        m = [{"level": "L2", "hit": True}, {"level": "L2", "hit": False},
+             {"level": "L3", "hit": True}]
+        assert detection_rate(m, "L2") == (1, 2)
+        assert detection_rate(m, "L3") == (1, 1)
+
+    def test_nontrivial_rate_ignores_normal(self):
+        from eval.metrics import nontrivial_case_rate
+        cases = [{"dimension": "normal", "expect": {}},
+                 {"dimension": "boundary", "expect": {}},
+                 {"dimension": "normal", "expect": {"db_check": "SELECT 1;"}}]
+        assert nontrivial_case_rate(cases) == 0.667
+
+    def test_context_precision(self):
+        from eval.metrics import context_precision
+        hits = [{"chunk_id": "a"}, {"chunk_id": "b"}, {"chunk_id": "c"}]
+        assert context_precision(hits, {"a", "c"}) == 0.667
+
+    def test_false_positive_zero_when_no_reports(self):
+        from eval.metrics import false_positive_rate
+        assert false_positive_rate(0, 0) == 0.0
+
+
+class TestRetrieve:
+    def test_path_is_one_token(self):
+        pytest.importorskip("jieba")
+        from agent.retrieve import tokenize
+        tokens = tokenize("POST /api.php/v1/executions/4/tasks 创建任务")
+        assert "/api.php/v1/executions/4/tasks" in tokens
+
+    def test_four_corpus_sources(self):
+        pytest.importorskip("jieba")
+        from agent import retrieve
+        chunks = retrieve._all_chunks()
+        sources = {c["source"] for c in chunks}
+        assert any("接口文档" in s for s in sources)
+        assert any("Issue" in s for s in sources)

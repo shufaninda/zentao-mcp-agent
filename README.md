@@ -23,18 +23,24 @@ L4 评测   金标准注入集 → 分级检出率 / 误报率 / 有效用例率
 
 | 能力 | 证据 |
 |---|---|
-| 声明式用例执行器 | 基线 9 条全绿 0.79s；LLM 输出永不 eval；防 SSRF |
+| 声明式用例执行器 | 基线 10 条全绿；LLM 输出永不 eval；防 SSRF；db_check 只读账号实测 |
 | 故障注入→检出→建单 | 注入 L2 缺陷 → 归因 product_bug 0.8 → 禅道真实建 Bug |
 | 三道幂等防线 | 第二次运行关联已有 Bug，零重复建单 |
 | 归因分类（v3） | 金标准双场景：clean 0 误报 / 注入检出 |
 | 功能开关 | AUTO_CREATE_BUG=false 时只记录不建单 |
 | 跨运行记忆 | 指纹账本（write-ahead + TTL 孤儿恢复） |
-| 金标准评测集 | 可逆源码补丁注入（双层校验同时打穿） |
+| 金标准评测集 | 可逆源码补丁注入 → **L2 3/3、L3 1/1、误报 0** |
+| 越权归因 | L3 注入实证：403→2xx 即使被业务校验挡住也判 product_bug |
+| 双后端记忆 | SQLite / MySQL 同一份逻辑，claim 幂等 + 复核回流真跑通过 |
+| 人工复核闭环 | `python -m scripts.review list/accept/reject` → muted 抑制 / RAG 回灌 |
+| 评测指标 | `eval/metrics.py` 纯函数：检出率/误报率/有效用例率/一轮通过率 |
+| 单测与报告 | 25 个单测 + Allure 产物 + Actions 绿色 |
 
 ## 快速开始
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-full.txt   # 完整版（含 LangGraph/fastmcp/chromadb）
+# CI 只需 requirements.txt（轻量）
 copy .env.example .env          # 填禅道地址与账号
 
 # 单元测试（不需要禅道）
@@ -67,7 +73,10 @@ data/     用例 JSON · 金标准 · 知识库
 
 ## 待办
 
-- [ ] 探索模式（LLM 生成用例）真实跑通（需 LLM_API_KEY）
-- [ ] 记忆层换 MySQL（schema 已同构，改 DSN 即可）
-- [ ] Langfuse trace 接入（接口已埋 @observe）
-- [ ] L3 隐蔽缺陷注入（越权/并发）
+- [ ] 探索模式（LLM 生成用例）真实跑通（需 LLM_API_KEY / LLM_BASE_URL）
+- [ ] Langfuse trace 接入（接口已埋 @observe，指标函数已就绪）
+- [ ] RAGAS 官方指标对照（当前用 eval/metrics.py 纯函数代理）
+- [ ] CI 内起禅道容器跑集成冒烟（当前 CI 只跑纯函数单测）
+- [x] 记忆层 MySQL 双后端（已实现并真跑）
+- [x] 人工复核回流闭环（review CLI + muted + RAG 回灌）
+- [x] L3 隐蔽缺陷注入（框架层 checkPriv 双补丁）

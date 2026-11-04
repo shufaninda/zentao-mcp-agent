@@ -38,7 +38,9 @@
       "catching_case": "BUG_EMPTY_001",
       "expected_category": "product_bug",
       "expected_dimension": "eq_invalid",
-      "requires": ["DEF_L2_001"]
+      "requires": [
+        "DEF_L2_001"
+      ]
     },
     {
       "id": "DEF_L2_003",
@@ -51,7 +53,9 @@
       "catching_case": "BUG_TITLE_001",
       "expected_category": "product_bug",
       "expected_dimension": "eq_invalid",
-      "requires": ["DEF_L2_004"]
+      "requires": [
+        "DEF_L2_004"
+      ]
     },
     {
       "id": "DEF_L2_004",
@@ -64,7 +68,9 @@
       "catching_case": "BUG_TITLE_001",
       "expected_category": "product_bug",
       "expected_dimension": "eq_invalid",
-      "requires": ["DEF_L2_003"]
+      "requires": [
+        "DEF_L2_003"
+      ]
     },
     {
       "id": "DRILL_ENV_001",
@@ -81,6 +87,34 @@
       "kind": "drill_data_dependency",
       "catching_case": "DEP_B_001",
       "expected_category": "data_dependency"
+    },
+    {
+      "id": "DEF_L3_001",
+      "level": "L3",
+      "name": "框架层权限判断短路（checkPriv 恒不拦截）",
+      "kind": "source_patch",
+      "file": "/apps/zentao/framework/api/router.class.php",
+      "find": "        if($module and $method and !$common->isOpenMethod($module, $method) and !commonModel::hasPriv($module, $method))",
+      "replace": "        if(false)",
+      "catching_case": "BUG_PRIV_001",
+      "expected_category": "product_bug",
+      "expected_dimension": "auth",
+      "note": "改框架核心文件：本地靶场可逆（.orig 备份），绝不对生产环境使用"
+    },
+    {
+      "id": "DEF_L3_002",
+      "level": "L3",
+      "name": "entry 层权限判断短路（与 DEF_L3_001 成对生效）",
+      "kind": "source_patch",
+      "file": "/apps/zentao/framework/api/entry.class.php",
+      "find": "        if($module and $method and !$this->loadModel('common')->isOpenMethod($module, $method) and !commonModel::hasPriv($module, $method))",
+      "replace": "        if(false)",
+      "catching_case": "BUG_PRIV_001",
+      "expected_category": "product_bug",
+      "expected_dimension": "auth",
+      "requires": [
+        "DEF_L3_001"
+      ]
     }
   ]
 }

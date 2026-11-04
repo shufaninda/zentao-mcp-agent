@@ -50,6 +50,11 @@ def dedup_failure(fp: str, signature: str, module: str, case_id: str,
     """
     row = ledger.upsert_fingerprint(fp, module, signature, case_id, run_id)
     # new/failed/recorded 都值得再尝试建单（failed=上次建单失败，recorded=之前只记录）
-    action = "new" if (tri.category == "product_bug"
-                       and row["state"] in ("new", "failed", "recorded")) else "link"
+    # 只有 product_bug 且账本状态允许时才建单；muted（人工判定误报）永不建单
+    action = "link"
+    if (tri.category == "product_bug"
+            and row["state"] in ("new", "failed", "recorded")):
+        action = "new"
+    if row["state"] == "muted":
+        action = "link"
     return {"action": action, "fp": fp, "row": row, "triage": tri}

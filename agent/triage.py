@@ -71,6 +71,21 @@ def _business_error_signal(failure: dict) -> bool:
     return '"result":"fail"' in snap or '"error"' in snap
 
 
+def _auth_bypass_signal(failure: dict, case: TestCase | None) -> bool:
+    """越权信号：auth 维度用例期望 401/403，实际却返回 2xx。
+
+    实测教训（L3 注入）：权限被绕过但被后续业务校验挡住时，响应体是
+    {"result":"fail"}，通用规则会判 case_issue；但 403→200 本身就是
+    权限失效的铁证，必须优先于"业务失败体"规则。
+    """
+    if case is None or case.dimension.value != "auth":
+        return False
+    ev = failure.get("evidence") or {}
+    exp = str(ev.get("expected", "")).replace("status in ", "")
+    actual = str(ev.get("actual", ""))
+    return any(code in exp for code in ("401", "403")) and actual.startswith("2")
+
+
 def _created_data_signal(failure: dict) -> bool:
     """数据被创建：POST 期望拒绝但响应里有 id —— 缺陷的强信号。"""
     ev = failure.get("evidence") or {}
@@ -116,6 +131,9 @@ def triage_failure(
     if _business_error_signal(failure):
         score += 0.2
         evidence.append("业务失败体 +0.2")
+    if _auth_bypass_signal(failure, case):
+        score += 0.4
+        evidence.append("权限绕过(4xx→2xx) +0.4")
     confidence = round(min(score, 0.99), 2)
 
     # ---- 分类 ----
@@ -129,6 +147,9 @@ def triage_failure(
         category = "env_issue" if any(r.get("ok") for r in repro["results"]) else "uncertain"
     elif case.depends_on and _dependency_signal(failure):
         category, confidence = "data_dependency", 0.85
+    elif _auth_bypass_signal(failure, case):
+        # 权限绕过优先于"业务失败体"：403→2xx 已是缺陷，即使被别的校验挡住
+        category, confidence = "product_bug", max(confidence, 0.8)
     elif _business_error_signal(failure) and not _created_data_signal(failure):
         # 服务器明确拒绝了 → 行为正确，多半是用例期望写错
         category, confidence = "case_issue", 0.7

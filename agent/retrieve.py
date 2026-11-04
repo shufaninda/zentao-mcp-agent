@@ -74,12 +74,28 @@ def _ledger_chunks() -> list[dict]:
     return out
 
 
+def _review_chunks() -> list[dict]:
+    """人工判定样本 —— 最高质量语料（带人的判断，直接回灌）。"""
+    out = []
+    try:
+        rows = ledger.review_decisions()
+    except Exception:  # noqa: BLE001
+        return out
+    for r in rows:
+        text = (f"# 人工判定 {r['status']} / 用例 {r['case_id']}\n"
+                f"归因 {r['category']} 置信度 {r['confidence']}\n依据: {r['reasoning']}")
+        out.append({"chunk_id": f"review:{r['id']}", "source": "人工复核回灌",
+                    "text": text, "quality": "high", "anchors": []})
+    return out
+
+
 def _all_chunks() -> list[dict]:
-    return _interface_chunks() + _issue_chunks() + _ledger_chunks()
+    return (_interface_chunks() + _issue_chunks()
+            + _ledger_chunks() + _review_chunks())
 
 
 # ---------------------------------------------------------------- token 化
-_ascii_re = re.compile(r"[a-zA-Z_][\w./:-]*")
+_ascii_re = re.compile(r"[a-zA-Z_/][\w./:-]*")  # 允许 / 开头：接口路径整体成 token
 _cjk_re = re.compile(r"[\u4e00-\u9fff]+")
 
 
@@ -143,6 +159,8 @@ def search(scope: list[str], top_k: int = 6) -> list[dict]:
         text_lower = c["text"].lower()
         anchor_hits = sum(1 for a in anchors if a in text_lower)
         s *= (1 + 2 * anchor_hits)
+        if "接口文档" in c.get("source", ""):
+            s *= 1.5                                   # 主料：精确接口知识优先于历史讨论
         if c.get("quality") == "low":
             s *= 0.5
         scored.append((s, c))

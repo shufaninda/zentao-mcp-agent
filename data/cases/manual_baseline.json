@@ -8,9 +8,20 @@
     "request": {
       "method": "POST",
       "path": "/api.php/v1/tokens",
-      "json_body": { "account": "admin", "password": "123456" }
+      "json_body": {
+        "account": "admin",
+        "password": "123456"
+      }
     },
-    "expect": { "status_in": [200, 201], "body_has": ["token"] }
+    "expect": {
+      "status_in": [
+        200,
+        201
+      ],
+      "body_has": [
+        "token"
+      ]
+    }
   },
   {
     "id": "TASK_001",
@@ -22,15 +33,27 @@
       "path": "/api.php/v1/executions/4/tasks",
       "json_body": {
         "name": "自动化基线-正常",
-        "assignedTo": ["admin"],
+        "assignedTo": [
+          "admin"
+        ],
         "type": "devel",
         "pri": 3,
         "estStarted": "2026-11-03",
         "deadline": "2026-11-10"
       }
     },
-    "expect": { "status": 201, "body_has": ["id"] },
-    "cleanup": [{ "method": "DELETE", "path": "/api.php/v1/tasks/{id}" }]
+    "expect": {
+      "status": 201,
+      "body_has": [
+        "id"
+      ]
+    },
+    "cleanup": [
+      {
+        "method": "DELETE",
+        "path": "/api.php/v1/tasks/{id}"
+      }
+    ]
   },
   {
     "id": "TASK_002",
@@ -43,14 +66,21 @@
       "path": "/api.php/v1/executions/4/tasks",
       "json_body": {
         "name": "",
-        "assignedTo": ["admin"],
+        "assignedTo": [
+          "admin"
+        ],
         "type": "devel",
         "pri": 3,
         "estStarted": "2026-11-03",
         "deadline": "2026-11-10"
       }
     },
-    "expect": { "status": 200, "body_eq": { "result": "fail" } }
+    "expect": {
+      "status": 200,
+      "body_eq": {
+        "result": "fail"
+      }
+    }
   },
   {
     "id": "TASK_003",
@@ -62,15 +92,27 @@
       "path": "/api.php/v1/executions/4/tasks",
       "json_body": {
         "name": "aaaaaaaaaaaaaaaaaaaa",
-        "assignedTo": ["admin"],
+        "assignedTo": [
+          "admin"
+        ],
         "type": "devel",
         "pri": 3,
         "estStarted": "2026-11-03",
         "deadline": "2026-11-10"
       }
     },
-    "expect": { "status": 201, "body_has": ["id"] },
-    "cleanup": [{ "method": "DELETE", "path": "/api.php/v1/tasks/{id}" }]
+    "expect": {
+      "status": 201,
+      "body_has": [
+        "id"
+      ]
+    },
+    "cleanup": [
+      {
+        "method": "DELETE",
+        "path": "/api.php/v1/tasks/{id}"
+      }
+    ]
   },
   {
     "id": "TASK_004",
@@ -84,31 +126,50 @@
       "path": "/api.php/v1/executions/4/tasks",
       "json_body": {
         "name": "aaaaaaaaaaaaaaaaaaaaa",
-        "assignedTo": ["admin"],
+        "assignedTo": [
+          "admin"
+        ],
         "type": "devel",
         "pri": 3,
         "estStarted": "2026-11-03",
         "deadline": "2026-11-10"
       }
     },
-    "expect": { "status": 400 },
-    "cleanup": [{ "method": "DELETE", "path": "/api.php/v1/tasks/{id}" }]
+    "expect": {
+      "status": 400
+    },
+    "cleanup": [
+      {
+        "method": "DELETE",
+        "path": "/api.php/v1/tasks/{id}"
+      }
+    ]
   },
   {
     "id": "TASK_005",
     "desc": "查询不存在的任务应 404",
     "dimension": "error",
     "auth": "admin",
-    "request": { "method": "GET", "path": "/api.php/v1/tasks/99999999" },
-    "expect": { "status": 404 }
+    "request": {
+      "method": "GET",
+      "path": "/api.php/v1/tasks/99999999"
+    },
+    "expect": {
+      "status": 404
+    }
   },
   {
     "id": "AUTH_001",
     "desc": "无凭证访问用户列表应 401",
     "dimension": "auth",
     "auth": "nobody",
-    "request": { "method": "GET", "path": "/api.php/v1/users" },
-    "expect": { "status": 401 }
+    "request": {
+      "method": "GET",
+      "path": "/api.php/v1/users"
+    },
+    "expect": {
+      "status": 401
+    }
   },
   {
     "id": "AUTH_002",
@@ -126,14 +187,42 @@
         "password2": "abc12345"
       }
     },
-    "expect": { "status": 403 }
+    "expect": {
+      "status": 403
+    }
   },
   {
     "id": "TASK_006",
     "desc": "删除不存在的任务返回 200（幂等语义，与 GET 404 不一致但 REST 允许）",
     "dimension": "error",
     "auth": "admin",
-    "request": { "method": "DELETE", "path": "/api.php/v1/tasks/99999999" },
-    "expect": { "status": 200 }
+    "request": {
+      "method": "DELETE",
+      "path": "/api.php/v1/tasks/99999999"
+    },
+    "expect": {
+      "status": 200
+    }
+  },
+  {
+    "id": "TASK_007",
+    "desc": "任务列表 + DB 落库双断言（只读账号查库）",
+    "dimension": "normal",
+    "auth": "admin",
+    "request": {
+      "method": "GET",
+      "path": "/api.php/v1/tasks",
+      "params": {
+        "page": 1,
+        "limit": 5
+      }
+    },
+    "expect": {
+      "status": 200,
+      "body_has": [
+        "tasks"
+      ],
+      "db_check": "SELECT count(*) FROM zt_task LIMIT 1;"
+    }
   }
 ]

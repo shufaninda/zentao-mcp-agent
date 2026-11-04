@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from agent.coverage import REQUIRED_DEFAULT, validate_coverage
 from agent.schemas import TestCase
 from core import llm
 
@@ -62,7 +61,5 @@ def generate(scope: list[str], missing_dims: list[str] | None = None,
     text = llm.chat_json(system, prompt)
     raw = llm.parse_json(text)
 
-    cases = [TestCase.model_validate(c).model_dump() for c in raw]  # 规则层收口
-    gaps = validate_coverage([TestCase.model_validate(c) for c in cases],
-                             [d for d in REQUIRED_DEFAULT])
-    return cases, gaps
+    # 规则层收口：任何不合规输出在这里抛 ValidationError（主战场）
+    return [TestCase.model_validate(c).model_dump() for c in raw]

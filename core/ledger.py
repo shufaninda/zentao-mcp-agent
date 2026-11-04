@@ -24,8 +24,54 @@ _SCHEMA_VERSION = 1
 _local = threading.local()
 
 
-def _connect() -> sqlite3.Connection:
-    """每个线程一个连接。DSN 形如 sqlite:///path 或 mysql://...（MySQL week2 接）。"""
+class _MySQLAdapter:
+    """把 pymysql 包装成 sqlite3.Connection 的最小接口，让上层逻辑只写一份 SQL。
+
+    差异处理：? → %s 占位符、executescript 拆句、DictCursor 返回 dict、
+    启动断言 READ COMMITTED + UTC（设计冻结项）、断线自动重连。
+    """
+
+    def __init__(self, dsn: str):
+        import pymysql
+        u = urlparse(dsn)
+        self.conn = pymysql.connect(
+            host=u.hostname or "127.0.0.1", port=u.port or 3306,
+            user=u.username or "", password=u.password or "",
+            database=u.path.lstrip("/") or "zentao_memory",
+            charset="utf8mb4", autocommit=False,
+            cursorclass=pymysql.cursors.DictCursor,
+        )
+        with self.conn.cursor() as c:
+            c.execute("SET time_zone = '+00:00'")
+            c.execute("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
+        self.conn.commit()
+
+    def execute(self, sql: str, params=()):
+        cur = self.conn.cursor()
+        cur.execute(sql.replace("?", "%s"), params)
+        self._last = cur
+        return cur
+
+    def executescript(self, script: str):
+        # 去掉行首/行内 -- 注释，否则 MySQL 会把后半句吃掉
+        lines = [l.split("--")[0] for l in script.splitlines()]
+        for stmt in [x.strip() for x in "\n".join(lines).split(";") if x.strip()]:
+            self.execute(stmt)
+        self.conn.commit()
+
+    def commit(self):
+        self.conn.commit()
+
+    def ping(self):
+        self.conn.ping(reconnect=True)
+
+
+def is_mysql() -> bool:
+    return settings.ledger_dsn.startswith("mysql://")
+
+
+def _connect():
+    """每个线程一个连接。SQLite（默认）或 MySQL，schema 完全一致。"""
     dsn = settings.ledger_dsn
     if dsn.startswith("sqlite:///"):
         path = dsn[len("sqlite:///"):]
@@ -35,13 +81,17 @@ def _connect() -> sqlite3.Connection:
         conn.execute("PRAGMA journal_mode=WAL")       # 并发读写友好
         conn.execute("PRAGMA busy_timeout=5000")
         return conn
-    raise NotImplementedError(f"week1 仅支持 SQLite，收到: {dsn[:30]}...")
+    if is_mysql():
+        return _MySQLAdapter(dsn)
+    raise NotImplementedError(f"不支持的 LEDGER_DSN: {dsn[:30]}...")
 
 
-def db() -> sqlite3.Connection:
+def db():
     if not hasattr(_local, "conn"):
         _local.conn = _connect()
         _init_schema(_local.conn)
+    elif is_mysql():
+        _local.conn.ping()   # 长连接断线自愈
     return _local.conn
 
 
@@ -49,14 +99,16 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _init_schema(conn: sqlite3.Connection) -> None:
-    conn.executescript("""
+def _ddl() -> str:
+    """兼容两种后端的 DDL。MySQL 需要定长主键 + AUTO_INCREMENT。"""
+    auto = "AUTO_INCREMENT" if is_mysql() else "AUTOINCREMENT"
+    return f"""
     CREATE TABLE IF NOT EXISTS schema_version (
         version     INTEGER PRIMARY KEY,
         applied_at  TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS runs (
-        run_id       TEXT PRIMARY KEY,
+        run_id       VARCHAR(64) PRIMARY KEY,
         task         TEXT NOT NULL,
         patches_hash TEXT,
         started_at   TEXT NOT NULL,
@@ -65,7 +117,7 @@ def _init_schema(conn: sqlite3.Connection) -> None:
         report_path  TEXT
     );
     CREATE TABLE IF NOT EXISTS fingerprints (
-        fp          TEXT PRIMARY KEY,          -- md5(module|method+path|exp!=act|err_sig)[:12]
+        fp          VARCHAR(32) PRIMARY KEY,          -- md5(module|method+path|exp!=act|err_sig)[:12]
         module      TEXT NOT NULL,
         signature   TEXT NOT NULL,             -- 可读错误特征（供 search_bugs 关键词）
         state       TEXT NOT NULL DEFAULT 'new',  -- new/creating/created/failed/recorded
@@ -79,13 +131,13 @@ def _init_schema(conn: sqlite3.Connection) -> None:
         note        TEXT
     );
     CREATE TABLE IF NOT EXISTS fingerprint_cases (
-        fp       TEXT NOT NULL,
-        case_id  TEXT NOT NULL,
-        first_seen TEXT NOT NULL,
+        fp       VARCHAR(32) NOT NULL,
+        case_id  VARCHAR(64) NOT NULL,
+        first_seen VARCHAR(40) NOT NULL,
         PRIMARY KEY (fp, case_id)
     );
     CREATE TABLE IF NOT EXISTS review_queue (
-        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        id         INTEGER PRIMARY KEY {auto},
         run_id     TEXT NOT NULL,
         case_id    TEXT NOT NULL,
         category   TEXT NOT NULL,
@@ -94,8 +146,13 @@ def _init_schema(conn: sqlite3.Connection) -> None:
         status     TEXT NOT NULL DEFAULT 'pending',  -- pending/accepted/rejected
         created_at TEXT NOT NULL
     );
-    """)
-    v = conn.execute("SELECT COUNT(*) FROM schema_version").fetchone()[0]
+    """
+
+
+def _init_schema(conn) -> None:
+    conn.executescript(_ddl())
+    v = conn.execute("SELECT COUNT(*) FROM schema_version").fetchone()
+    v = next(iter(v.values())) if isinstance(v, dict) else v[0]
     if not v:
         conn.execute("INSERT INTO schema_version VALUES (?, ?)", (_SCHEMA_VERSION, _now()))
     conn.commit()
@@ -104,7 +161,8 @@ def _init_schema(conn: sqlite3.Connection) -> None:
 # ---------------------------------------------------------------- runs
 def start_run(run_id: str, task: str, patches_hash: str = "") -> None:
     db().execute(
-        "INSERT OR REPLACE INTO runs (run_id, task, patches_hash, started_at) VALUES (?,?,?,?)",
+        ("REPLACE INTO" if is_mysql() else "INSERT OR REPLACE INTO")
+        + " runs (run_id, task, patches_hash, started_at) VALUES (?,?,?,?)",
         (run_id, task, patches_hash, _now()),
     )
     db().commit()
@@ -136,7 +194,8 @@ def upsert_fingerprint(fp: str, module: str, signature: str, case_id: str, run_i
             (now, run_id, fp),
         )
     conn.execute(
-        "INSERT OR IGNORE INTO fingerprint_cases (fp, case_id, first_seen) VALUES (?,?,?)",
+        ("INSERT IGNORE INTO" if is_mysql() else "INSERT OR IGNORE INTO")
+        + " fingerprint_cases (fp, case_id, first_seen) VALUES (?,?,?)",
         (fp, case_id, now),
     )
     conn.commit()
@@ -207,3 +266,43 @@ def queue_review(run_id: str, case_id: str, category: str,
     )
     db().commit()
     return cur.lastrowid
+
+
+# ---------------------------------------------------------------- 人工复核回流
+def list_review_pending(limit: int = 20) -> list[dict]:
+    """列出待人工复核的 uncertain 条目。"""
+    rows = db().execute(
+        "SELECT * FROM review_queue WHERE status='pending' ORDER BY id DESC LIMIT ?",
+        (limit,),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def resolve_review(review_id: int, accept: bool, fp: str | None = None) -> dict:
+    """人工判定回流（闭环的关键一步）。
+
+    accept=True  + fp → 指纹置回 'new'，下一轮允许建单（人工确认了这是真缺陷）
+    accept=False + fp → 指纹置 'muted'，后续永不再建单（抑制误报）
+    判定结果本身会进入 RAG 语料（agent/retrieve.py::_review_chunks）。
+    """
+    status = "accepted" if accept else "rejected"
+    db().execute("UPDATE review_queue SET status=? WHERE id=?", (status, review_id))
+    if fp:
+        new_state = "new" if accept else "muted"
+        note = f"人工复核 #{review_id}: {status}"
+        db().execute(
+            "UPDATE fingerprints SET state=?, note=? WHERE fp=?",
+            (new_state, note, fp),
+        )
+    db().commit()
+    return {"review_id": review_id, "status": status, "fp": fp}
+
+
+def review_decisions(limit: int = 50) -> list[dict]:
+    """已被人工判定的样本 —— RAG 回灌语料（高置信度、带人的判断）。"""
+    rows = db().execute(
+        """SELECT id, case_id, category, confidence, reasoning, status
+           FROM review_queue WHERE status IN ('accepted','rejected')
+           ORDER BY id DESC LIMIT ?""", (limit,),
+    ).fetchall()
+    return [dict(r) for r in rows]

@@ -37,6 +37,10 @@ GROUPS = [
      "patches": ["DEF_L2_003", "DEF_L2_004"],
      "catching_case": "BUG_TITLE_001", "preexisting": False,
      "name": "Bug标题非空校验失效（双层补丁）"},
+    {"id": "G_L3_PRIV", "level": "L3",
+     "patches": ["DEF_L3_001", "DEF_L3_002"],
+     "catching_case": "BUG_PRIV_001", "preexisting": False,
+     "name": "框架层越权：普通用户可创建用户"},
 ]
 
 

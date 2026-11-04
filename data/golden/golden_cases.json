@@ -126,5 +126,26 @@
         "result": "fail"
       }
     }
+  },
+  {
+    "id": "BUG_PRIV_001",
+    "desc": "普通用户创建用户应 403（L3 越权注入后应放行）",
+    "dimension": "auth",
+    "auth": "test1",
+    "no_cleanup_reason": "干净版被 403 拒绝无数据；注入版探针用户由 golden_run 收尾脚本清理",
+    "request": {
+      "method": "POST",
+      "path": "/api.php/v1/users",
+      "json_body": {
+        "account": "golden_l3_probe",
+        "realname": "L3探针",
+        "password1": "abc12345",
+        "password2": "abc12345",
+        "gender": "m"
+      }
+    },
+    "expect": {
+      "status": 403
+    }
   }
 ]

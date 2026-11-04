@@ -62,11 +62,19 @@ def generate(state: dict) -> dict:
     打回语义（分支②）：validate 给 coverage_gaps，本节点只生成缺失维度。
     """
     from agent import generate as generate_impl
-    cases = generate_impl.generate(
+    # "只补不重写"：已有用例原样保留，LLM 只生成缺失维度
+    existing = []
+    old_path = state.get("cases_path")
+    if old_path and Path(old_path).exists():
+        existing = json.loads(Path(old_path).read_text("utf-8"))
+    new_cases = generate_impl.generate(
         scope=state["target"].get("scope", []),
         missing_dims=state.get("coverage_gaps", []),
-        keep_ids=state.get("validated_case_ids", []),
+        keep_ids=[c["id"] for c in existing],
     )
+    ids = {c["id"] for c in existing}
+    cases = existing + [c for c in new_cases if c["id"] not in ids]
+    state["retry_count"] = state.get("retry_count", 0) + 1  # 分支②轮数上限
     path = Path(settings.report_dir) / f"cases-{state['run_id']}.json"
     path.write_text(json.dumps(cases, ensure_ascii=False, indent=2), "utf-8")
     state["cases_path"] = str(path)
@@ -86,6 +94,8 @@ def validate(state: dict) -> dict:
     cases = [TestCase.model_validate(c) for c in raw]  # 结构闸兜底
     gaps = validate_coverage(cases)
     state["coverage_gaps"] = gaps
+    if gaps and state.get("retry_count", 0) >= 2:
+        state["coverage_incomplete"] = True    # 已通过的用例继续执行，不整单失败
     state["nontrivial_ratio"] = round(nontrivial_ratio(cases), 2)
     state["validated_case_ids"] = [c.id for c in cases]
     return state
