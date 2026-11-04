@@ -26,8 +26,21 @@ from core import executor, trace, zentao_auth
 from core.config import settings
 
 # ---------------------------------------------------------------- run 级状态
-RUN_ID = datetime.now().strftime("%Y%m%d-%H%M%S")
+CASES_PATH = None  # 由 pytest --cases 注入；默认 manual_baseline.json
+
+
+def pytest_addoption(parser):
+    parser.addoption("--cases", action="store", default=None,
+                     help="用例 JSON 路径（orchestrator 注入；默认 manual_baseline）")
+
+
+def pytest_configure(config):
+    global CASES_PATH
+    CASES_PATH = config.getoption("--cases")
+
+
 FAILURES_PATH = settings.report_dir / "failures.jsonl"
+RUN_ID = datetime.now().strftime("%Y%m%d-%H%M%S")
 RUN_STATE = {"setup_fails": 0, "tripped": False}
 
 trace.set_run_id(RUN_ID)

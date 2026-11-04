@@ -16,8 +16,11 @@ from agent.schemas import TestCase as CaseSchema  # 别名：防 pytest 把它�
 CASES_PATH = Path(__file__).resolve().parent.parent / "data" / "cases" / "manual_baseline.json"
 
 
-def load_cases(path: Path = CASES_PATH) -> list[TestCase]:
-    raw = json.loads(path.read_text(encoding="utf-8"))
+def load_cases(path: str | Path | None = None) -> list[CaseSchema]:
+    """路径优先级：--cases 参数（orchestrator 注入）> 默认 manual_baseline。"""
+    from tests import conftest as cf
+    p = Path(path or cf.CASES_PATH or CASES_PATH)
+    raw = json.loads(p.read_text(encoding="utf-8"))
     cases = [CaseSchema.model_validate(c) for c in raw]  # 规则层：不合规在此处报错
 
     ids = {c.id for c in cases}
@@ -33,10 +36,12 @@ def load_cases(path: Path = CASES_PATH) -> list[TestCase]:
 
 def pytest_generate_tests(metafunc):
     if "case" in metafunc.fixturenames:
-        cases = load_cases()
+        # 直接读 pytest 选项（不要 import conftest —— 命名空间包会拿到第二个实例）
+        path = metafunc.config.getoption("--cases") or CASES_PATH
+        cases = load_cases(path)
         metafunc.parametrize("case", cases, ids=[c.id for c in cases])
 
 
-def test_ai_case(case: TestCase, case_runner):
+def test_ai_case(case: CaseSchema, case_runner):
     """通用执行器：不认识任何业务，只按 JSON 说的做。"""
     case_runner.run(case)

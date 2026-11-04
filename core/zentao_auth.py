@@ -78,3 +78,15 @@ def invalidate(account: str) -> None:
         cache = _read_cache()
         cache.pop(account, None)
         _write_cache(cache)
+
+
+def authenticated_session(role: str = "admin") -> "requests.Session":
+    """给非 pytest 调用方（triage 复现确认）用的便捷入口。"""
+    import requests as _rq
+    if role == "nobody":
+        return _rq.Session()
+    acc, pwd = ((settings.account, settings.password) if role == "admin"
+                else (settings.alt_account, settings.alt_password))
+    s = _rq.Session()
+    s.headers.update({"Token": get_token(acc, pwd)})
+    return s

@@ -1,0 +1,71 @@
+[
+  {
+    "id": "BUG_LEN_001",
+    "desc": "任务名称 30 字符（禅道原生缺陷：无长度上限）",
+    "dimension": "boundary",
+    "auth": "admin",
+    "request": {
+      "method": "POST",
+      "path": "/api.php/v1/executions/4/tasks",
+      "json_body": {
+        "name": "golden-length-aaaaaaaaaaaaaaaaaaaaaa",
+        "assignedTo": ["admin"],
+        "type": "devel",
+        "pri": 3,
+        "estStarted": "2026-11-03",
+        "deadline": "2026-11-10"
+      }
+    },
+    "expect": { "status": 400 },
+    "cleanup": [{ "method": "DELETE", "path": "/api.php/v1/tasks/{id}" }]
+  },
+  {
+    "id": "BUG_EMPTY_001",
+    "desc": "任务名称为空（L2 补丁注入后应创建成功，即校验失效）",
+    "dimension": "eq_invalid",
+    "auth": "admin",
+    "no_cleanup_reason": "期望被校验拒绝；仅当注入补丁生效时才会建出数据，此时由 DRILL 清理流程处理",
+    "request": {
+      "method": "POST",
+      "path": "/api.php/v1/executions/4/tasks",
+      "json_body": {
+        "name": "",
+        "assignedTo": ["admin"],
+        "type": "devel",
+        "pri": 3,
+        "estStarted": "2026-11-03",
+        "deadline": "2026-11-10"
+      }
+    },
+    "expect": { "status": 400 }
+  },
+  {
+    "id": "DEP_A_001",
+    "desc": "依赖演练 A：创建任务且不清理",
+    "dimension": "normal",
+    "auth": "admin",
+    "no_cleanup_reason": "依赖演练：故意不清理，供 DEP_B_001 复现 404",
+    "request": {
+      "method": "POST",
+      "path": "/api.php/v1/executions/4/tasks",
+      "json_body": {
+        "name": "golden-dep-drill",
+        "assignedTo": ["admin"],
+        "type": "devel",
+        "pri": 3,
+        "estStarted": "2026-11-03",
+        "deadline": "2026-11-10"
+      }
+    },
+    "expect": { "status": 201, "body_has": ["id"] }
+  },
+  {
+    "id": "DEP_B_001",
+    "desc": "依赖演练 B：查询固定 id 2（数据被 A 类用例动过时 404）",
+    "dimension": "error",
+    "auth": "admin",
+    "depends_on": ["DEP_A_001"],
+    "request": { "method": "GET", "path": "/api.php/v1/tasks/2" },
+    "expect": { "status": 200, "body_has": ["id"] }
+  }
+]

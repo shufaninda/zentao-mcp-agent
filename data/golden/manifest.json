@@ -1,0 +1,60 @@
+{
+  "description": "金标准注入集。每个缺陷 = 已知正确答案的故障注入（AI 代码审核方法论：评测集）。",
+  "levels": {
+    "L1": "明显（状态码/字段缺失类）",
+    "L2": "中等（校验失效/边界不处理）",
+    "L3": "隐蔽（越权/并发/软删除），week2+ 实现注入方式"
+  },
+  "defects": [
+    {
+      "id": "DEF_PRE_001",
+      "level": "L2",
+      "name": "任务名称无长度上限（禅道原生缺陷，无需注入）",
+      "kind": "preexisting",
+      "catching_case": "BUG_LEN_001",
+      "expected_category": "product_bug",
+      "expected_dimension": "boundary"
+    },
+    {
+      "id": "DEF_L2_001",
+      "level": "L2",
+      "name": "禁用任务名称必填校验（API form 层 required=false）",
+      "kind": "source_patch",
+      "file": "/apps/zentao/module/task/config/form.php",
+      "find": "$config->task->form->create['name']         = array('type' => 'string',   'required' => true,  'default' => '');",
+      "replace": "$config->task->form->create['name']         = array('type' => 'string',   'required' => false,  'default' => '');",
+      "catching_case": "BUG_EMPTY_001",
+      "expected_category": "product_bug",
+      "expected_dimension": "eq_invalid"
+    },
+    {
+      "id": "DEF_L2_002",
+      "level": "L2",
+      "name": "禁用任务名称非空校验（model 层 requiredFields 去掉 name）",
+      "kind": "source_patch",
+      "file": "/apps/zentao/module/task/config.php",
+      "find": "$config->task->create->requiredFields      = 'execution,name,type';",
+      "replace": "$config->task->create->requiredFields      = 'execution,type';",
+      "catching_case": "BUG_EMPTY_001",
+      "expected_category": "product_bug",
+      "expected_dimension": "eq_invalid",
+      "requires": ["DEF_L2_001"]
+    },
+    {
+      "id": "DRILL_ENV_001",
+      "level": "drill",
+      "name": "非缺陷对照：停容器（环境问题）",
+      "kind": "drill_env_stop",
+      "catching_case": "BUG_EMPTY_001",
+      "expected_category": "env_issue"
+    },
+    {
+      "id": "DRILL_DEP_001",
+      "level": "drill",
+      "name": "非缺陷对照：用例间数据依赖（A 删 B 查）",
+      "kind": "drill_data_dependency",
+      "catching_case": "DEP_B_001",
+      "expected_category": "data_dependency"
+    }
+  ]
+}

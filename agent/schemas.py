@@ -14,7 +14,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-_ID_RE = re.compile(r"[A-Z]{2,8}_\d{3}")
+_ID_RE = re.compile(r"[A-Z][A-Z0-9_]{1,18}_\d{3}")  # 允许多段前缀：BUG_LEN_001
 
 
 class Dimension(str, Enum):
